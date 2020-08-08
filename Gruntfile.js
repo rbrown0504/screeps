@@ -25,7 +25,7 @@ module.exports = function (grunt) {
 				filter:  'isFile',
 				cwd:     'dist/',
 				src:     '**',
-				dest:    'C:/Users/RBROW/AppData/Local/Screeps/scripts/127_0_0_1___21025/screeps-new'
+				dest:    'C:/Users/RBROW/AppData/Local/Screeps/scripts/127_0_0_1___21025/screeps-new/'
 			},
 		},
 	});
