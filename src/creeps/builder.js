@@ -2,18 +2,36 @@ var builder = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store.getFreeCapacity() > 0) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3
+        };
+        //console.log(creep.name,' Store Capacity: ' + creep.store.getFreeCapacity());
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        //GET LAST ACTION AND GO TO THAT.
+        var continueBuild = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            continueBuild = true;
+        }
+
+        if(creep.store.getFreeCapacity() > 0 && !continueBuild) {
             var sources = creep.room.find(FIND_SOURCES);
             if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(sources[0]);
+                creep.memory.lastAction = ACTIONS.HARVEST;
             }
         }
         else {
             // here is the sayHello() prototype
-            creep.sayHello();
-            
-            if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(Game.spawns['Spawn1']);
+            creep.sayDebug();
+            var construction = creep.room.find(FIND_CONSTRUCTION_SITES);
+            console.log(creep.name,JSON.stringify(construction));            
+            if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(construction[0]);
+                creep.memory.lastAction = ACTIONS.BUILD;
             }
         }
     },
