@@ -49,7 +49,7 @@ function __getDirname(path) {
 	return require("path").resolve(__dirname + "/" + path + "/../");
 }
 /********** End of header **********/
-/********** Start module 0: C:\Users\RBROW\screeps-starter\screeps-starter\src\main.js **********/
+/********** Start module 0: C:\Users\RBROW\screeps\src\main.js **********/
 __modules[0] = function(module, exports) {
 let creepLogic = __require(1,0);
 let roomLogic = __require(2,0);
@@ -76,8 +76,8 @@ module.exports.loop = function () {
 }
 return module.exports;
 }
-/********** End of module 0: C:\Users\RBROW\screeps-starter\screeps-starter\src\main.js **********/
-/********** Start module 1: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\index.js **********/
+/********** End of module 0: C:\Users\RBROW\screeps\src\main.js **********/
+/********** Start module 1: C:\Users\RBROW\screeps\src\creeps\index.js **********/
 __modules[1] = function(module, exports) {
 let creepLogic = {
     harvester:     __require(4,1),
@@ -87,8 +87,8 @@ let creepLogic = {
 module.exports = creepLogic;
 return module.exports;
 }
-/********** End of module 1: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\index.js **********/
-/********** Start module 2: C:\Users\RBROW\screeps-starter\screeps-starter\src\room\index.js **********/
+/********** End of module 1: C:\Users\RBROW\screeps\src\creeps\index.js **********/
+/********** Start module 2: C:\Users\RBROW\screeps\src\room\index.js **********/
 __modules[2] = function(module, exports) {
 let roomLogic = {
     spawning:     __require(6,2),
@@ -97,16 +97,16 @@ let roomLogic = {
 module.exports = roomLogic;
 return module.exports;
 }
-/********** End of module 2: C:\Users\RBROW\screeps-starter\screeps-starter\src\room\index.js **********/
-/********** Start module 3: C:\Users\RBROW\screeps-starter\screeps-starter\src\prototypes\index.js **********/
+/********** End of module 2: C:\Users\RBROW\screeps\src\room\index.js **********/
+/********** Start module 3: C:\Users\RBROW\screeps\src\prototypes\index.js **********/
 __modules[3] = function(module, exports) {
 let files = {
     creep: __require(7,3)
 }
 return module.exports;
 }
-/********** End of module 3: C:\Users\RBROW\screeps-starter\screeps-starter\src\prototypes\index.js **********/
-/********** Start module 4: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\harvester.js **********/
+/********** End of module 3: C:\Users\RBROW\screeps\src\prototypes\index.js **********/
+/********** Start module 4: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
 __modules[4] = function(module, exports) {
 var harvester = {
 
@@ -146,8 +146,8 @@ var harvester = {
 module.exports = harvester;
 return module.exports;
 }
-/********** End of module 4: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\harvester.js **********/
-/********** Start module 5: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\upgrader.js **********/
+/********** End of module 4: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
+/********** Start module 5: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
 __modules[5] = function(module, exports) {
 var roleUpgrader = {
 
@@ -185,8 +185,8 @@ var roleUpgrader = {
 module.exports = roleUpgrader;
 return module.exports;
 }
-/********** End of module 5: C:\Users\RBROW\screeps-starter\screeps-starter\src\creeps\upgrader.js **********/
-/********** Start module 6: C:\Users\RBROW\screeps-starter\screeps-starter\src\room\spawning.js **********/
+/********** End of module 5: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
+/********** Start module 6: C:\Users\RBROW\screeps\src\room\spawning.js **********/
 __modules[6] = function(module, exports) {
 let creepLogic = __require(1,6);
 let creepTypes = _.keys(creepLogic);
@@ -210,15 +210,15 @@ function spawnCreeps(room) {
 module.exports = spawnCreeps;
 return module.exports;
 }
-/********** End of module 6: C:\Users\RBROW\screeps-starter\screeps-starter\src\room\spawning.js **********/
-/********** Start module 7: C:\Users\RBROW\screeps-starter\screeps-starter\src\prototypes\creep.js **********/
+/********** End of module 6: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+/********** Start module 7: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
 __modules[7] = function(module, exports) {
 Creep.prototype.sayHello = function sayHello() {
     this.say("Hello", true);
 }
 return module.exports;
 }
-/********** End of module 7: C:\Users\RBROW\screeps-starter\screeps-starter\src\prototypes\creep.js **********/
+/********** End of module 7: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);
