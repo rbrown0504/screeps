@@ -64,10 +64,10 @@ var builder = {
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution) {
+    spawn: function(room, level, roleDistribution,numberExtensions) {
         var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
-        console.log('builders: ' + builders.length, room.name);
-        if (roleDistribution.total < roleDistribution.min) {
+        console.log('builders: ' + roleDistribution.total, room.name);
+        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
             return true;
         }
     },

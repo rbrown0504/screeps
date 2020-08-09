@@ -80,7 +80,7 @@ module.exports.loop = function () {
 			goalPercentage: 0.2,
 			currentPercentage: 0,
 			max: 3,
-			min: 0,
+			min: 2,
 			minExtensions: 0
 		}
 	};

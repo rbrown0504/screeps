@@ -45,10 +45,10 @@ var roleUpgrader = {
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution) {
+    spawn: function(room, level, roleDistribution,numberExtensions) {
         var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
         console.log('Upgraders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min) {
+        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
             return true;
         }
     },
