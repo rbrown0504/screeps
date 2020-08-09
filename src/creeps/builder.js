@@ -38,6 +38,8 @@ var builder = {
                     creep.memory.lastBuild = construction[0].id;
                 }
             } else {
+                //continue to work a consutruction site as long as it returns an object
+                //when it no longer returns an object, find a new construction site
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {                    
                     if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
@@ -46,6 +48,8 @@ var builder = {
                         creep.memory.lastBuild = getNCons.id;
                     }
                 } else if (creep.store[RESOURCE_ENERGY] > 0) {
+                    //construction site is no longer an object (or if it has been built to structure)
+                    //find a new construction site
                     var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
                     if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(construction[0]);
