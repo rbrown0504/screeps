@@ -58,10 +58,61 @@ let prototypes = __require(3,0);
 
 module.exports.loop = function () {
     Game.myRooms = _.filter(Game.rooms, r => r.controller && r.controller.level > 0 && r.controller.my);
-    _.forEach(Game.myRooms, r => roomLogic.spawning(r));
+    var roleDistribution = {
+		carrier: {
+			total: 0,
+			goalPercentage: 0.3,
+			currentPercentage: 0,
+			max: 2,
+			min: 2,
+			minExtensions: 0			
+        },
+        harvester: {
+			total: 0,
+			goalPercentage: 0.3,
+			currentPercentage: 0,
+			max: 2,
+			min: 2,
+			minExtensions: 0			
+		},
+		builder: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 15,
+			min: 3,
+			minExtensions: 0
+        },
+        builder1: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 15,
+			min: 1,
+			minExtensions: 0
+		},
+		upgrader: {
+			total: 0,
+			goalPercentage: 0.2,
+			currentPercentage: 0,
+			max: 3,
+			min: 2,
+			minExtensions: 0
+		}
+	};
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-
+        let role = creep.memory.role;
+        roleDistribution[role].total++;
+        if (creepLogic[role]) {
+            
+        }
+    }
+    _.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
+    _.forEach(Game.myRooms, r => roomLogic.defense(r));    
+    
+    for(var name in Game.creeps) {
+        var creep = Game.creeps[name];
         let role = creep.memory.role;
         if (creepLogic[role]) {
             creepLogic[role].run(creep);
@@ -82,6 +133,7 @@ __modules[1] = function(module, exports) {
 let creepLogic = {
     harvester:     __require(4,1),
     upgrader:      __require(5,1),
+    builder:      __require(6,1),
 }
 
 module.exports = creepLogic;
@@ -91,7 +143,8 @@ return module.exports;
 /********** Start module 2: C:\Users\RBROW\screeps\src\room\index.js **********/
 __modules[2] = function(module, exports) {
 let roomLogic = {
-    spawning:     __require(6,2),
+    spawning:     __require(7,2),
+    defense:     __require(8,2),
 }
 
 module.exports = roomLogic;
@@ -101,7 +154,7 @@ return module.exports;
 /********** Start module 3: C:\Users\RBROW\screeps\src\prototypes\index.js **********/
 __modules[3] = function(module, exports) {
 let files = {
-    creep: __require(7,3)
+    creep: __require(9,3)
 }
 return module.exports;
 }
@@ -112,34 +165,77 @@ var harvester = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store.getFreeCapacity() > 0) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
         }
-        else {
-            creep.sayHello();
-            
+        if (creep.memory.source == undefined) {
+            var sources = creep.room.find(FIND_SOURCES);
+            creep.memory.source = sources[0].id;
+        }
+
+        if(creep.store.getFreeCapacity() > 0) {
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+            }
+        } else {            
             if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(Game.spawns['Spawn1']);
             }
         }
     },
-    spawn: function(room) {
+    spawn: function(room, level, roleDistribution,numberExtensions) {
         var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
-        console.log('Harvesters: ' + harvesters.length, room.name);
-
-        if (harvesters.length < 2) {
+        console.log('Harvesters: ' + roleDistribution.total, room.name);        
+        if (roleDistribution.total < roleDistribution.min 
+            && numberExtensions >= roleDistribution.minExtensions 
+            && roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },
-    spawnData: function(room) {
-            let name = 'Harvester' + Game.time;
-            let body = [WORK, CARRY, MOVE];
+    spawnData: function(room, level) {
+            let name = 'harvester' + Game.time;
             let memory = {role: 'harvester'};
-        
-            return {name, body, memory};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
     }
 };
 
@@ -153,32 +249,97 @@ var roleUpgrader = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store[RESOURCE_ENERGY] == 0) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
         }
-        else {
+        var continueUpgrade = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.UPGRADE) {
+            continueUpgrade = true;
+        }
+        if (creep.memory.source == undefined) {
+            var sources = creep.room.find(FIND_SOURCES);
+            creep.memory.source = sources[0].id;
+        }
+
+        if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.memory.lastAction = ACTIONS.HARVEST;
+                creep.say('Harvesting');
+            }
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.memory.lastAction = ACTIONS.HARVEST;
+            }
+        } else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller);
+                creep.memory.lastAction = ACTIONS.UPGRADE;
             }
         }
     },
-    spawn: function(room) {
+    spawn: function(room, level, roleDistribution,numberExtensions) {
         var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
-        console.log('Upgraders: ' + upgraders.length, room.name);
-
-        if (upgraders.length < 2) {
+        console.log('Upgraders: ' + roleDistribution.total, room.name);
+        if (roleDistribution.total < roleDistribution.min 
+            && numberExtensions >= roleDistribution.minExtensions
+            && roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },
-    spawnData: function(room) {
+    spawnData: function(room, level) {
             let name = 'Upgrader' + Game.time;
-            let body = [WORK, CARRY, MOVE];
             let memory = {role: 'upgrader'};
-        
-            return {name, body, memory};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
     }
 };
 
@@ -186,18 +347,170 @@ module.exports = roleUpgrader;
 return module.exports;
 }
 /********** End of module 5: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
-/********** Start module 6: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+/********** Start module 6: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
 __modules[6] = function(module, exports) {
-let creepLogic = __require(1,6);
+var builder = {
+
+    /** @param {Creep} creep **/
+    run: function(creep) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        var continueBuild = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            continueBuild = true;
+        }
+        if (creep.memory.source == undefined) {
+            var sources = creep.room.find(FIND_SOURCES);
+            creep.memory.source = sources[0].id;
+        }
+        if(creep.store.getFreeCapacity() > 0 && !continueBuild) {
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.memory.lastAction = ACTIONS.HARVEST;
+                creep.say('Harvesting');
+            }
+        } else {
+            if (creep.memory.lastBuild == undefined) {                
+                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(construction[0]);
+                    creep.memory.lastAction = ACTIONS.BUILD;
+                    creep.memory.lastBuild = construction[0].id;
+                }
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);
+                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {                    
+                    if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(getNCons);
+                        creep.memory.lastAction = ACTIONS.BUILD;
+                        creep.memory.lastBuild = getNCons.id;
+                    }
+                } else if (creep.store[RESOURCE_ENERGY] > 0) {
+                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                    if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(construction[0]);
+                        creep.memory.lastAction = ACTIONS.BUILD;
+                        creep.memory.lastBuild = construction[0].id;
+                    }
+                } else {
+                    creep.say('Empty');
+                    var sources = creep.room.find(FIND_SOURCES);
+                    if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(sources[0]);
+                        creep.memory.lastAction = ACTIONS.HARVEST;
+                    }
+                }
+            }
+        }
+    },
+    spawn: function(room, level, roleDistribution,numberExtensions) {
+        var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
+        console.log('builders: ' + roleDistribution.total, room.name);
+        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'builder' + Game.time;
+            let memory = {role: 'builder'};
+            if(level <= 1) {                
+                let body = [WORK, CARRY, MOVE];                
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = builder;
+return module.exports;
+}
+/********** End of module 6: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
+/********** Start module 7: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+__modules[7] = function(module, exports) {
+let creepLogic = __require(1,7);
 let creepTypes = _.keys(creepLogic);
 
-function spawnCreeps(room) {
+function spawnCreeps(room,roleDistribution) {
     _.forEach(creepTypes, type => console.log(type));
+
+    var creeps = room.find(FIND_MY_CREEPS);
+    var totalCreeps = 0;
+    var i = 0;
+	for(var n in creeps) {
+        totalCreeps++;
+	}
+    var populationLevelMultiplier = 8;
+    var creepLevel = totalCreeps / populationLevelMultiplier;
+
+    var deposits = room.find(FIND_STRUCTURES);
+    var fullDeposits = 0;
+    var numberExtensions = 0;
+    for(var i = 0; i < deposits.length; i++) {
+        var deposit = deposits[i];        
+        if (deposit.structureType == STRUCTURE_EXTENSION || deposit.structureType == STRUCTURE_SPAWN) {
+            if(deposit.energy == deposit.energyCapacity) {
+                fullDeposits++;
+            }
+            if (deposit.structureType == STRUCTURE_EXTENSION) {
+                numberExtensions++
+            }
+        }
+    }
+    console.log('Total Deposits: ' + deposits.length + ' , ' + 'Full Deposits: ' + fullDeposits);
+    var resourceLevel = fullDeposits / 5;
+    var level = Math.floor(creepLevel + resourceLevel);    
+	if(totalCreeps < 5){
+        console.log('Level Under 5:  ' + level);
+	    level = 1;
+	}
+    console.log('Level:  ' + level);
     let creepTypeNeeded = _.find(creepTypes, function(type) {
-        return creepLogic[type].spawn(room);
+        return creepLogic[type].spawn(room,level,roleDistribution[type],numberExtensions);
     });
-    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room);
-    console.log(room, JSON.stringify(creepSpawnData));
+    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level);
+    console.log('total creeps: ' + totalCreeps + ' population multiplier ' + populationLevelMultiplier + ' creep level ' + creepLevel + ' resourceLevel ' + resourceLevel);
 
     if (creepSpawnData) {
         let spawn = room.find(FIND_MY_SPAWNS)[0];
@@ -210,15 +523,50 @@ function spawnCreeps(room) {
 module.exports = spawnCreeps;
 return module.exports;
 }
-/********** End of module 6: C:\Users\RBROW\screeps\src\room\spawning.js **********/
-/********** Start module 7: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
-__modules[7] = function(module, exports) {
+/********** End of module 7: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+/********** Start module 8: C:\Users\RBROW\screeps\src\room\defense.js **********/
+__modules[8] = function(module, exports) {
+let creepLogic = __require(1,8);
+let creepTypes = _.keys(creepLogic);
+
+function defense(room) {
+
+    var towers = room.find(FIND_STRUCTURES, { filter: { structureType: STRUCTURE_TOWER }});
+    if (towers.length) {
+        _.forEach(towers, function(tower) {
+            console.log(tower);
+            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES,{ filter: (structure) => structure.hits < structure.hitsMax});
+            if (closestDamagedStructure) {
+                tower.repair(closestDamagedStructure);
+            }
+            var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+            if (closestHostile) {
+                tower.attack(closestHostile);
+            }
+        });
+    }
+}
+
+module.exports = defense;
+return module.exports;
+}
+/********** End of module 8: C:\Users\RBROW\screeps\src\room\defense.js **********/
+/********** Start module 9: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
+__modules[9] = function(module, exports) {
 Creep.prototype.sayHello = function sayHello() {
     this.say("Hello", true);
 }
+
+Creep.prototype.sayDebug = function sayHello() {
+    this.say("Debug", true);
+}
+
+Creep.prototype.getObject = function(id) {
+	return Game.getObjectById(id);
+};
 return module.exports;
 }
-/********** End of module 7: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
+/********** End of module 9: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);
