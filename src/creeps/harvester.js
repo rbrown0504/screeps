@@ -26,7 +26,9 @@ var harvester = {
     spawn: function(room, level, roleDistribution,numberExtensions) {
         var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
         console.log('Harvesters: ' + roleDistribution.total, room.name);        
-        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
+        if (roleDistribution.total < roleDistribution.min 
+            && numberExtensions >= roleDistribution.minExtensions 
+            && roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },

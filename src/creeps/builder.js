@@ -67,7 +67,9 @@ var builder = {
     spawn: function(room, level, roleDistribution,numberExtensions) {
         var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
         console.log('builders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
+        if (roleDistribution.total < roleDistribution.min && 
+            numberExtensions >= roleDistribution.minExtensions && 
+            roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },

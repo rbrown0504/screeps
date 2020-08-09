@@ -48,7 +48,9 @@ var roleUpgrader = {
     spawn: function(room, level, roleDistribution,numberExtensions) {
         var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
         console.log('Upgraders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min && numberExtensions >= roleDistribution.minExtensions) {
+        if (roleDistribution.total < roleDistribution.min 
+            && numberExtensions >= roleDistribution.minExtensions
+            && roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },
