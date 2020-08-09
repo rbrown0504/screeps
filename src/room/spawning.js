@@ -42,8 +42,7 @@ function spawnCreeps(room,roleDistribution) {
     });
 
     // get the data for spawning a new creep of creepTypeNeeded
-    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level);
-    //console.log(room, JSON.stringify(creepSpawnData));   
+    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level); 
     console.log('total creeps: ' + totalCreeps + ' population multiplier ' + populationLevelMultiplier + ' creep level ' + creepLevel + ' resourceLevel ' + resourceLevel);
 
     if (creepSpawnData) {
