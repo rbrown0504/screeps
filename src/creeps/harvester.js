@@ -25,15 +25,15 @@ var harvester = {
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
         var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
-        console.log('Harvesters: ' + roleDistribution['harvester'].total, room.name);        
-        if (roleDistribution['harvester'].total < roleDistribution['harvester'].min) {
+        console.log('Harvesters: ' + roleDistribution.total, room.name);        
+        if (roleDistribution.total < roleDistribution.min) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
     spawnData: function(room, level) {
-            let name = 'builder' + Game.time;
-            let memory = {role: 'builder'};
+            let name = 'harvester' + Game.time;
+            let memory = {role: 'harvester'};
             if(level <= 1) {
                 let body = [WORK, CARRY, MOVE];
                 return {name, body, memory};

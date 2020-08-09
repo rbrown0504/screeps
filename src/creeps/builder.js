@@ -64,52 +64,57 @@ var builder = {
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level) {
+    spawn: function(room, level, roleDistribution) {
         var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
         console.log('builders: ' + builders.length, room.name);
-
-        if (builders.length < 5) {
+        if (roleDistribution.total < roleDistribution.min) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
     spawnData: function(room, level) {
-            var abilities;
-            if(level <= 1) {
-                abilities = [WORK, CARRY, MOVE];
+            let name = 'builder' + Game.time;
+            let memory = {role: 'builder'};
+            if(level <= 1) {                
+                let body = [WORK, CARRY, MOVE];                
+                return {name, body, memory};
             } else
             if(level <= 2) {
-                abilities = [WORK, WORK, CARRY, MOVE];
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 3) {
-                abilities = [WORK, WORK, CARRY, MOVE, MOVE];
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 4) {
-                abilities = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 5) {
-                abilities = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 6) {
-                abilities = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 7) {
-                abilities = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 8) {
-                abilities = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level <= 9) {
-                abilities = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
             } else
             if(level >= 10) {
-                abilities = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
             }
-            let name = 'builder' + Game.time;
-            //let body = [WORK, CARRY, MOVE];
-            let memory = {role: 'builder'};
-        
-            return {name, abilities, memory};
     }
 };
 
