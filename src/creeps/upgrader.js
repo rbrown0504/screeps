@@ -2,15 +2,45 @@ var roleUpgrader = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store[RESOURCE_ENERGY] == 0) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
         }
-        else {
+        //GET LAST ACTION AND GO TO THAT.
+        var continueUpgrade = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.UPGRADE) {
+            continueUpgrade = true;
+        }
+        //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
+        if (creep.memory.source == undefined) {
+            var sources = creep.room.find(FIND_SOURCES);
+            creep.memory.source = sources[0].id;
+        }
+
+        if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
+            //go to default source
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.memory.lastAction = ACTIONS.HARVEST;
+                creep.say('Harvesting');
+            }
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.memory.lastAction = ACTIONS.HARVEST;
+            }
+        } else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller);
+                creep.memory.lastAction = ACTIONS.UPGRADE;
             }
         }
     },
