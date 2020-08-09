@@ -2,16 +2,21 @@ var harvester = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store.getFreeCapacity() > 0) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
         }
-        else {
-            // here is the sayHello() prototype
-            creep.sayHello();
-            
+        //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
+        if (creep.memory.source == undefined) {
+            var sources = creep.room.find(FIND_SOURCES);
+            creep.memory.source = sources[0].id;
+        }
+
+        if(creep.store.getFreeCapacity() > 0) {
+            var source = creep.getObject(creep.memory.source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+            }
+        } else {            
             if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(Game.spawns['Spawn1']);
             }
