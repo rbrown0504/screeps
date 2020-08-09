@@ -5,9 +5,9 @@ let prototypes = require('./prototypes');
 
 module.exports.loop = function () {
     // make a list of all of our rooms
-    Game.myRooms = _.filter(Game.rooms, r => r.controller && r.controller.level > 0 && r.controller.my);
-    //do some role specific stuff
-    var roleDistribution = {
+	Game.myRooms = _.filter(Game.rooms, r => r.controller && r.controller.level > 0 && r.controller.my);
+	//get some room metrics together	
+	var roleDistribution = {
 		// CreepMiner: {
 		// 	total: 0,
 		// 	goalPercentage: 0.2,
@@ -40,7 +40,7 @@ module.exports.loop = function () {
 			goalPercentage: 0.25,
 			currentPercentage: 0,
 			max: 15,
-			min: 3,
+			min: 1,
 			minExtensions: 0
         },
         builder1: {
@@ -48,7 +48,7 @@ module.exports.loop = function () {
 			goalPercentage: 0.25,
 			currentPercentage: 0,
 			max: 15,
-			min: 1,
+			min: 0,
 			minExtensions: 0
 		},
 		// CreepHealer: {
@@ -84,26 +84,118 @@ module.exports.loop = function () {
 			minExtensions: 0
 		}
 	};
-    for(var name in Game.creeps) {
-        var creep = Game.creeps[name];
-        let role = creep.memory.role;
-        roleDistribution[role].total++;
-        if (creepLogic[role]) {
-            
-        }
-    }
+	var roomMetricsDefault = {
+		totalHostileCreeps : 0,
+		totalHostileSpawns : 0,
+		totalHostileConstructionSites : 0,
+		totalMyConstructionSites : 0,
+		totalConstructionSites : 0,
+		totalMyStructures : 0,
+		totalMyContainers : 0,
+		totalCreeps : 0,
+		totalMyCreeps : 0,
+		totalDroppedResources : 0,
+	};
+	var roomMap = new Map();
+	for(var n in Game.myRooms) {
+		var room = Game.myRooms[n];
+		var roomMetrics;
+		if (roomMap.get(room.name) != null) {
+			roomMetrics = roomMap.get(room.name);
+		} else {
+			roomMetrics = roomMetricsDefault;
+		}
+		//go through construction sites	
+		var constructionSites = _.filter(Game.constructionSites, (site) => site.room.name == room.name);;
+		_.forEach(constructionSites, function(site) {
+			roomMetrics.totalConstructionSites++;
+			if (site.my) {
+				roomMetrics.totalMyConstructionSites++;
+			} else {
+				roomMetrics.totalHostileConstructionSites++;
+			};
+		});
+		//go through creeps
+		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);;
+		_.forEach(totalCreeps, function(creep) {
+			roomMetrics.totalCreeps++;
+			if (creep.my) {				
+				roomMetrics.totalMyCreeps++;
+				let role = creep.memory.role;
+				roleDistribution[role].total++;	
+			} else {
+				roomMetrics.totalHostileCreeps++;
+			}
+			
+		});
+		//go through structures
+		var myStructures = room.find(FIND_STRUCTURES);
+		_.forEach(myStructures, function(structure) {
+			console.log('structureType: ' + structure.structureType);
+			roomMetrics.totalMyStructures++;
+			if (structure.structureType == STRUCTURE_CONTAINER) {
+				console.log('structure: ' + JSON.stringify(structure));
+				roomMetrics.totalMyContainers++;			
+			} 
+		});		
+		//go through sources
+		var sources = room.find(
+			FIND_SOURCES, {
+				filter: function(src) {
+					var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+					if(targets.length == 0) {
+						return true;
+					}
+	
+					return false;
+				}
+		});
+		var sourceMap = new Map();
+		var sourceMetricsDefault = { 
+			workersNearby : 0,
+			containersInRange : 0,
+		}
+		const extensions = room.find(FIND_MY_STRUCTURES, {
+			filter: { structureType: STRUCTURE_CONTAINER }
+		});
+		//go through each source and see if there are extensions near by
+		_.forEach(sources, function(source) {
+			var sourceMetrics;
+			if (sourceMap.get(source.id) != null) {
+				sourceMetrics = sourceMap.get(source.id);
+			} else {
+				sourceMetrics = sourceMetricsDefault;
+			}	
+			_.forEach(extensions, function(ext) {
+				if (source.pos.inRangeTo(extensions),3) {
+					sourceMetrics.containersInRange++;
+				}
+			});
+			sourceMap.set(source.id,sourceMetrics);
+			
+		});
+		//console.log('SourceMap: ' + JSON.stringify(sourceMap));
+		//roomMetrics.sourceMetrics = sourceMap;		
+		roomMap.set(room.name,roomMetrics);
+		console.log('RoomMetrics: ' + JSON.stringify(roomMetrics));
+	}	
+	
     // run spawn logic for each room in our empire
     _.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
 
     // run defense logic for each room in our empire
-    _.forEach(Game.myRooms, r => roomLogic.defense(r));    
+	_.forEach(Game.myRooms, r => roomLogic.defense(r));    
+	
+	//run through resource management
+	_.forEach(Game.myRooms, r => roomLogic.resources(r));
+
     // run each creep role see /creeps/index.js
     
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
         let role = creep.memory.role;
         if (creepLogic[role]) {
-            creepLogic[role].run(creep);
+            creepLogic[role].run(creep,roomMap.get(creep.room.name));
         }
     }
 
