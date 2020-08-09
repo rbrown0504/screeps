@@ -6,17 +6,101 @@ let prototypes = require('./prototypes');
 module.exports.loop = function () {
     // make a list of all of our rooms
     Game.myRooms = _.filter(Game.rooms, r => r.controller && r.controller.level > 0 && r.controller.my);
-
-    // run spawn logic for each room in our empire
-    _.forEach(Game.myRooms, r => roomLogic.spawning(r));
-
-    // run defense logic for each room in our empire
-    _.forEach(Game.myRooms, r => roomLogic.defense(r));
-    
-    // run each creep role see /creeps/index.js
+    //do some role specific stuff
+    var roleDistribution = {
+		// CreepMiner: {
+		// 	total: 0,
+		// 	goalPercentage: 0.2,
+		// 	currentPercentage: 0,
+		// 	max: 2,
+		// 	min: 2,
+		// 	//max: 5,
+		// 	minExtensions: 0
+		// },
+		carrier: {
+			total: 0,
+			goalPercentage: 0.3,
+			currentPercentage: 0,
+			//max: 15,
+			max: 2,
+			min: 2,
+			minExtensions: 0			
+        },
+        harvester: {
+			total: 0,
+			goalPercentage: 0.3,
+			currentPercentage: 0,
+			//max: 15,
+			max: 2,
+			min: 2,
+			minExtensions: 0			
+		},
+		builder: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 15,
+			min: 3,
+			minExtensions: 0
+        },
+        builder1: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 15,
+			min: 1,
+			minExtensions: 0
+		},
+		// CreepHealer: {
+		// 	total: 0,
+		// 	goalPercentage: 0.25,
+		// 	currentPercentage: 0,
+		// 	max: 2,
+		// 	min: 0,
+		// 	minExtensions: 2
+		// },
+		// CreepSoldier: {
+		// 	total: 0,
+		// 	goalPercentage: 0.25,
+		// 	currentPercentage: 0,
+		// 	max: 5,
+		// 	min: 0,
+		// 	minExtensions: 2
+		// },
+		// CreepShooter: {
+		// 	total: 0,
+		// 	goalPercentage: 0.2,
+		// 	currentPercentage: 0,
+		// 	max: 3,
+		// 	min: 0,
+		// 	minExtensions: 10
+		// },
+		upgrader: {
+			total: 0,
+			goalPercentage: 0.2,
+			currentPercentage: 0,
+			max: 3,
+			min: 0,
+			minExtensions: 0
+		}
+	};
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
+        let role = creep.memory.role;
+        roleDistribution[role].total++;
+        if (creepLogic[role]) {
+            
+        }
+    }
+    // run spawn logic for each room in our empire
+    _.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
 
+    // run defense logic for each room in our empire
+    _.forEach(Game.myRooms, r => roomLogic.defense(r));    
+    // run each creep role see /creeps/index.js
+    
+    for(var name in Game.creeps) {
+        var creep = Game.creeps[name];
         let role = creep.memory.role;
         if (creepLogic[role]) {
             creepLogic[role].run(creep);
