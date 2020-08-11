@@ -131,51 +131,13 @@ module.exports.loop = function () {
 		//go through structures
 		var myStructures = room.find(FIND_STRUCTURES);
 		_.forEach(myStructures, function(structure) {
-			console.log('structureType: ' + structure.structureType);
+			//console.log('structureType: ' + structure.structureType);
 			roomMetrics.totalMyStructures++;
 			if (structure.structureType == STRUCTURE_CONTAINER) {
-				console.log('structure: ' + JSON.stringify(structure));
+				//console.log('structure: ' + JSON.stringify(structure));
 				roomMetrics.totalMyContainers++;			
 			} 
-		});		
-		//go through sources
-		var sources = room.find(
-			FIND_SOURCES, {
-				filter: function(src) {
-					var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-					if(targets.length == 0) {
-						return true;
-					}
-	
-					return false;
-				}
-		});
-		var sourceMap = new Map();
-		var sourceMetricsDefault = { 
-			workersNearby : 0,
-			containersInRange : 0,
-		}
-		const extensions = room.find(FIND_MY_STRUCTURES, {
-			filter: { structureType: STRUCTURE_CONTAINER }
-		});
-		//go through each source and see if there are extensions near by
-		_.forEach(sources, function(source) {
-			var sourceMetrics;
-			if (sourceMap.get(source.id) != null) {
-				sourceMetrics = sourceMap.get(source.id);
-			} else {
-				sourceMetrics = sourceMetricsDefault;
-			}	
-			_.forEach(extensions, function(ext) {
-				if (source.pos.inRangeTo(extensions),3) {
-					sourceMetrics.containersInRange++;
-				}
-			});
-			sourceMap.set(source.id,sourceMetrics);
-			
-		});
-		//console.log('SourceMap: ' + JSON.stringify(sourceMap));
-		//roomMetrics.sourceMetrics = sourceMap;		
+		});			
 		roomMap.set(room.name,roomMetrics);
 		console.log('RoomMetrics: ' + JSON.stringify(roomMetrics));
 	}	
@@ -205,5 +167,6 @@ module.exports.loop = function () {
             delete Memory.creeps[name];
             console.log('Clearing non-existing creep memory:', name);
         }
-    }
+	}
+	//console.log(JSON.stringify(Game.Memory));
 }
