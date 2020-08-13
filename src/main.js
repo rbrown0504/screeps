@@ -94,18 +94,17 @@ module.exports.loop = function () {
 			
 		});
 	}		
+
+	//run through population management
+	_.forEach(Game.myRooms, r => roomLogic.population(r));	
     // run spawn logic for each room in our empire
     _.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
-
     // run defense logic for each room in our empire
-	_.forEach(Game.myRooms, r => roomLogic.defense(r));    
-	
+	_.forEach(Game.myRooms, r => roomLogic.defense(r));    	
 	//run through resource management
 	_.forEach(Game.myRooms, r => roomLogic.resources(r));
-
-	//run through resource management
-	_.forEach(Game.myRooms, r => roomLogic.construction(r));
-
+	//run through construction management
+	_.forEach(Game.myRooms, r => roomLogic.construction(r));	
     // run each creep role see /creeps/index.js
     
     for(var name in Game.creeps) {

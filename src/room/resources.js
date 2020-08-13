@@ -19,13 +19,11 @@ function resources(room) {
     room.memory.sourceNeedsContainer = false;
     //go through sources and find structures (containers) that are in 3 range
     var sourcesInRangeToContainer = new Array();              
-    var i = 0;
     _.forEach(room.memory.sources, function(source) {
         if (source.containersNear == undefined) {            
             var newArray = new Array();
             source.containersNear = newArray;
         }
-
         var theSource = Game.getObjectById(source.id);
         //hasContainer = true IF CONTAINER IS FOUND BY A SOURCE
         var targets = theSource.pos.findInRange(FIND_STRUCTURES, 3);
@@ -57,7 +55,6 @@ function resources(room) {
                 }       
             }
         });
-        i++;
     });
     
     //rule: there must be at least on container within 3 range of each energy source
