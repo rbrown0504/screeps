@@ -2,6 +2,7 @@ let creepLogic = require("../creeps/index");
 let creepTypes = _.keys(creepLogic);
 
 function resources(room) {
+    room.memory.sources = null;
     var sources = room.find(
         FIND_SOURCES, {
             filter: function(src) {
@@ -13,17 +14,18 @@ function resources(room) {
                 return false;
             }
     });    
-    if (room.memory.sources == undefined) {
-        room.memory.sources = sources;        
-        
-    }        
+    room.memory.sources = sources;
+    room.memory.sourceNeedsContainer = 0;
+    room.memory.sourceNeedsContainer = false;
     //go through sources and find structures (containers) that are in 3 range
-    var sourcesInRangeToContainer = new Array();                  
+    var sourcesInRangeToContainer = new Array();              
+    var i = 0;
     _.forEach(room.memory.sources, function(source) {
         if (source.containersNear == undefined) {            
             var newArray = new Array();
             source.containersNear = newArray;
-        }        
+        }
+
         var theSource = Game.getObjectById(source.id);
         //hasContainer = true IF CONTAINER IS FOUND BY A SOURCE
         var targets = theSource.pos.findInRange(FIND_STRUCTURES, 3);
@@ -55,7 +57,9 @@ function resources(room) {
                 }       
             }
         });
+        i++;
     });
+    
     //rule: there must be at least on container within 3 range of each energy source
     console.log('Sources in range (3) of a container ' + sourcesInRangeToContainer + ' sources length ' + sources.length + ' sources container length ' + sourcesInRangeToContainer.length);
     
@@ -77,22 +81,6 @@ function resources(room) {
     } else if (sources.length == sourcesInRangeToContainer.length) {
         console.log('there is at least one container next to each source');
     }
-
-
-    // var towers = room.find(FIND_STRUCTURES, { filter: { structureType: STRUCTURE_TOWER }});
-    // if (towers.length) {
-    //     _.forEach(towers, function(tower) {
-    //         console.log(tower);
-    //         var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES,{ filter: (structure) => structure.hits < structure.hitsMax});
-    //         if (closestDamagedStructure) {
-    //             tower.repair(closestDamagedStructure);
-    //         }
-    //         var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    //         if (closestHostile) {
-    //             tower.attack(closestHostile);
-    //         }
-    //     });
-    // }
 }
 
 module.exports = resources;
