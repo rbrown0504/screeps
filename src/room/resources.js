@@ -15,15 +15,14 @@ function resources(room) {
             }
     });    
     room.memory.sources = sources;
-    room.memory.sourceNeedsContainer = 0;
+    
     room.memory.sourceNeedsContainer = false;
     //go through sources and find structures (containers) that are in 3 range
     var sourcesInRangeToContainer = new Array();              
     _.forEach(room.memory.sources, function(source) {
-        if (source.containersNear == undefined) {            
-            var newArray = new Array();
-            source.containersNear = newArray;
-        }
+        source.containersNear = null;
+        var newArray = new Array();
+        source.containersNear = newArray;
         var theSource = Game.getObjectById(source.id);
         //hasContainer = true IF CONTAINER IS FOUND BY A SOURCE
         var targets = theSource.pos.findInRange(FIND_STRUCTURES, 3);
@@ -31,25 +30,26 @@ function resources(room) {
             if (target.structureType == STRUCTURE_CONTAINER) {
                 sourcesInRangeToContainer.push(source.id);
                 source.hasContainer = true;
-                if (!source.containersNear.includes(target.id)) {
-                    source.containersNear.push(target.id);
+
+                if (!source.containersNear.includes(target.id + '__' + target.structureType)) {
+                    source.containersNear.push(target.id + '__' + target.structureType);
                     var existing = source.containersNear;
-                    existing.push(target.id);
+                    existing.push(target.id + '__' + target.structureType);
                     var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
                     source.containersNear = unique;
                 }
             };
         });
-        //hasContainer = true IF THERE IS A CONTAINER BEING CONSTRUCTED BY A SOURCE
+        //hasContainer = true IF THERE IS A CONTAINER BEING CONSTRUCTED BY A SOURCE        
         var targets = theSource.pos.findInRange(FIND_CONSTRUCTION_SITES, 3);
         _.forEach(targets, function(target) {
             if (target.structureType == STRUCTURE_CONTAINER) {
                 sourcesInRangeToContainer.push(source.id);
                 source.hasContainer = true;
-                if (!source.containersNear.includes(target.id)) {
-                    source.containersNear.push(target.id);
+                if (!source.containersNear.includes(target.id + '__underConstruction')) {
+                    source.containersNear.push(target.id + '__underConstruction');
                     var existing = source.containersNear;
-                    existing.push(target.id);
+                    existing.push(target.id + '__underConstruction');
                     var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
                     source.containersNear = unique;
                 }       
