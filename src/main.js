@@ -32,8 +32,16 @@ module.exports.loop = function () {
 			currentPercentage: 0,
 			//max: 15,
 			max: 2,
-			min: 1,
+			min: 2,
 			minExtensions: 0			
+		},
+		upgrader: {
+			total: 0,
+			goalPercentage: 0.2,
+			currentPercentage: 0,
+			max: 3,
+			min: 2,
+			minExtensions: 0,
 		},
 		builder: {
 			total: 0,
@@ -75,16 +83,9 @@ module.exports.loop = function () {
 		// 	min: 0,
 		// 	minExtensions: 10
 		// },
-		upgrader: {
-			total: 0,
-			goalPercentage: 0.2,
-			currentPercentage: 0,
-			max: 3,
-			min: 0,
-			minExtensions: 0
-		}
-	};
+
 		
+	};
 	for(var n in Game.myRooms) {
 		var room = Game.myRooms[n];
 		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);
@@ -110,7 +111,7 @@ module.exports.loop = function () {
         var creep = Game.creeps[name];
         let role = creep.memory.role;
         if (creepLogic[role]) {
-            creepLogic[role].run(creep);
+            creepLogic[role].run(creep,roleDistribution);
         }
     }
 	
