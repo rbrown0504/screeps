@@ -18,8 +18,19 @@ var roleUpgrader = {
         }
         //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
         if (creep.memory.source == undefined) {
-            var sources = creep.room.find(FIND_SOURCES);
-            creep.memory.source = sources[0].id;
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }
+        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
         }
 
         if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
