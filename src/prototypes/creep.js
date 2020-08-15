@@ -20,24 +20,27 @@ Creep.prototype.getRoomSource = function(id) {
     });
 };
 
-// Creep.prototype.getOpenContainer = function(room) {
-//     // Some kind of unit counter per resource (with Population)
-//     this.room = room;
-// 	var srcs = this.room.find(
-//         FIND_SOURCES, {
-//             filter: function(src) {
-//                 var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-//                 if(targets.length == 0) {
-//                     return true;
-//                 }
+Creep.prototype.getOpenDeposits = function() {
+    //get a deposit (extension or spawn) with free capacity
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+                structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });
+	return deposits;
+};
 
-//                 return false;
-//             }
-//     });
-// 	var srcIndex = Math.floor(Math.random()*srcs.length);
+Creep.prototype.getOpenContainer = function() {
+    // Some kind of unit counter per resource (with Population)
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_CONTAINER) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });	
+	return deposits;
+};
 
-// 	return srcs[srcIndex];
-// };
 Creep.prototype.constructSpawnExtensions = function buildSpawnExtensions(site) {    
     if (site == undefined) {
         site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
@@ -80,7 +83,6 @@ Creep.prototype.harvestContainer = function harvestContainer(container,ACTIONS) 
 }
 
 Creep.prototype.depositContainer = function depositContainer(container,ACTIONS) {
-        
     var result = this.transfer(container, RESOURCE_ENERGY);
     if(result == ERR_NOT_IN_RANGE) {
         this.moveTo(container);
