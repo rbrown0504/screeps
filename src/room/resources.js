@@ -13,14 +13,37 @@ function resources(room) {
 
                 return false;
             }
-    });    
-    room.memory.sources = sources;
-    
+    });
+    //establish room memory for sources
+    Source.prototype.memory = undefined;
+    if(!room.memory.sources){//If this room has no sources memory yet
+        room.memory.sources = {}; //Add it
+        for(var i in sources){
+            var source = sources[i];
+            source.memory = room.memory.sources[source.id] = {}; //Create a new empty memory object for this source
+            //Now you can do anything you want to do with this source
+            //for example you could add a worker counter:
+            source.memory.id = source.id;
+            source.memory.containersNear = {};
+        }
+    } else { //The memory already exists so lets add a shortcut to the sources in its memory
+        for(var i in sources){
+            var source = sources[i];
+            source.memory = this.memory.sources[source.id]; //Set the shortcut
+            source.memory.id = source.id;
+            source.memory.containersNear = {};
+        }
+    }
     room.memory.sourceNeedsContainer = false;
+
     //go through sources and find structures (containers) that are in 3 range
     var sourcesInRangeToContainer = new Array();              
     _.forEach(room.memory.sources, function(source) {
         source.containersNear = null;
+        source.hasContainerBuilt = false;
+        source.containersBuilt = null;
+        var newContainer = new Array();
+        source.containersBuilt = newContainer;
         var newArray = new Array();
         source.containersNear = newArray;
         var theSource = Game.getObjectById(source.id);
@@ -30,13 +53,20 @@ function resources(room) {
             if (target.structureType == STRUCTURE_CONTAINER) {
                 sourcesInRangeToContainer.push(source.id);
                 source.hasContainer = true;
-
+                source.hasContainerBuilt = true;
                 if (!source.containersNear.includes(target.id + '__' + target.structureType)) {
                     source.containersNear.push(target.id + '__' + target.structureType);
                     var existing = source.containersNear;
                     existing.push(target.id + '__' + target.structureType);
                     var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
-                    source.containersNear = unique;
+                    source.containersNear = unique;   
+                }
+                if (!source.containersBuilt.includes(target.id)) {
+                    source.containersBuilt.push(target.id);
+                    var existing = source.containersBuilt;
+                    existing.push(target.id);
+                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
+                    source.containersBuilt = unique;                    
                 }
             };
         });
@@ -56,7 +86,6 @@ function resources(room) {
             }
         });
     });
-    
     //rule: there must be at least on container within 3 range of each energy source
     console.log('Sources in range (3) of a container ' + sourcesInRangeToContainer + ' sources length ' + sources.length + ' sources container length ' + sourcesInRangeToContainer.length);
     
@@ -76,7 +105,7 @@ function resources(room) {
             room.memory.sourcesNeedingContainer = null;
         }        
     } else if (sources.length == sourcesInRangeToContainer.length) {
-        console.log('there is at least one container next to each source');
+        //console.log('there is at least one container next to each source');
     }
 }
 
