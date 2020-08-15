@@ -35,14 +35,14 @@ var builder = {
         });
         
         if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
-            console.log('**00000000000000000000000000000000000000000000000000000000000000000000000000000000000');                  
+            //console.log('**00000000000000000000000000000000000000000000000000000000000000000000000000000000000');                  
             if (creep.memory.lastBuild == undefined) {                     
                 var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
                 creep.buildSite(construction[0],ACTIONS);                
             } else {
                 //continue to work a consutruction site as long as it returns an object
                 //when it no longer returns an object, find a new construction site
-                console.log('***********************------------------------------****************************');
+                //console.log('***********************------------------------------****************************');
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
                     creep.buildSite(getNCons,ACTIONS);                    
@@ -61,7 +61,7 @@ var builder = {
                     }
                 } else if (creep.store[RESOURCE_ENERGY] == 0) {
                     //go to default source
-                    console.log('444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444');
+                    //console.log('444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444');
                     var source = creep.getObject(creep.memory.source);
                     creep.harvestSource(source,ACTIONS);                    
                 } else {
@@ -69,7 +69,7 @@ var builder = {
                 }
             }   
         } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
-            console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');                  
+            //console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');                  
             if (creep.store.getFreeCapacity() > 0) {
                 var source = creep.getObject(creep.memory.source);
                 //first try to find a container with available energy. If not, go and harvest a source
@@ -84,7 +84,7 @@ var builder = {
             } else {
                 //GO DO BUILD STUFF
                 var getNCons = creep.getObject(creep.memory.lastBuild);                
-                console.log('***3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
+                //console.log('***3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
                 if (getNCons) {
                     creep.buildSite(getNCons,ACTIONS);                
                 } else {
