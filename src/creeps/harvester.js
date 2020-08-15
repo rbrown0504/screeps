@@ -93,27 +93,16 @@ var harvester = {
         if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
             //go to default source
             var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-                creep.say('xHarvesting');
-            }
+            creep.harvestSource(source,ACTIONS);
         } else if (creep.store[RESOURCE_ENERGY] == 0) {
             creep.say('Empty');
             var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-            }
-        } else {            
-            //console.log('-***********************************here');            
+            creep.harvestSource(source,ACTIONS);
+        } else {                   
             if (creep.store[RESOURCE_ENERGY] == 0) {
                 creep.say('Empty');
                 var source = creep.getObject(creep.memory.source);
-                if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source);
-                    creep.memory.lastAction = ACTIONS.HARVEST;
-                }             
+                creep.harvestSource(source,ACTIONS);                
             } else if (creep.room.memory.sourceNeedsContainer == true) {
                 //if there isn't a single container withing 3 of source, construct one                
                 console.log('Construct a Container');
@@ -187,59 +176,25 @@ var harvester = {
                 //check if there are containers near a resource that are still a construction site and need to be built
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    //console.log('22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222');                  
-                    var target = Game.getObjectById(creep.memory.lastBuild);
-                    if (!creep.pos.inRangeTo(target,3)) {
-                        console.log('Sittinhg here waiting to build');
-                        creep.moveTo(target);                        
-                    }
-                    if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(getNCons);
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = getNCons.id;
-                    }
+                    creep.buildSite(getNCons,ACTIONS);
                 } else {
                     var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(construction[0]);
-                        //console.log('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111');                  
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = construction[0].id;
-                    }
+                    creep.buildSite(construction[0],ACTIONS);                    
                 }
-                
-            } else if (harvesterBuildContainer) {                
+            } else if (harvesterBuildContainer && depositFor != DEPOSIT_FOR.POPULATION) {                
                 //check if there are containers near a resource that are still a construction site and need to be built
-                //console.log('harvester.harvestBuildercontainer',harvesterContainersToBuild);                
                 var target = Game.getObjectById(harvesterContainersToBuild[0]);
-                if (!creep.pos.inRangeTo(target,3)) {
-                    console.log('Sittinhg here waiting to build');
-                    creep.moveTo(target);                        
-                }
-                if(creep.build(target) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = target.id;
-                }
+                creep.buildSite(target,ACTIONS);
             } else if (sourceContainer && depositFor != DEPOSIT_FOR.POPULATION) {
-                //console.log('has container for deposit. ' + creep.memory.source);                            
                 if (creep.memory.sourceCountainer === undefined) {
                     var containerSourceId = harvesterContainers[0];
                     var containerDeposit = Game.getObjectById(containerSourceId);
-                    if(creep.transfer(containerDeposit, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(containerDeposit);
-                    }                                        
+                    creep.depositContainer(containerDeposit,ACTIONS);      
                 }
-                //console.log('containerSource: ' + containerSource.memory.);
             } else if (depositFor == DEPOSIT_FOR.CONSTRUCTION) {
                 //help a builder out
                 var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(construction[0]);
-                    //console.log('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111');                  
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = construction[0].id;
-                }
+                creep.buildSite(construction[0],ACTIONS);                
             } else {     
                 //or go to spawn            
                 if (deposits.length > 0) {

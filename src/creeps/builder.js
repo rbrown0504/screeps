@@ -5,16 +5,12 @@ var builder = {
         var ACTIONS = {
             HARVEST: 1,
             DEPOSIT: 2,
-            BUILD: 3
+            BUILD: 3,
+            CONSTRUCT: 4
         };
         if (creep.memory.sourceRoom == undefined) {
             creep.memory.sourceRoom = creep.room.name;
         }
-        //GET LAST ACTION AND GO TO THAT.
-        // var continueBuild = false;
-        // if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
-        //     continueBuild = true;
-        // }
         //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
         if (creep.memory.source == undefined) {
             var srcs = creep.room.find(
@@ -37,107 +33,68 @@ var builder = {
                 containerDeposit = source.containersBuilt[0];
             };
         });
-        //console.log('containerDeposit ',containerDeposit);
         
         if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
             console.log('**00000000000000000000000000000000000000000000000000000000000000000000000000000000000');                  
-            if (creep.memory.lastBuild == undefined) {                
+            if (creep.memory.lastBuild == undefined) {                     
                 var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(construction[0]);
-                    console.log('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111');                  
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = construction[0].id;
-                }
+                creep.buildSite(construction[0],ACTIONS);                
             } else {
                 //continue to work a consutruction site as long as it returns an object
                 //when it no longer returns an object, find a new construction site
+                console.log('***********************------------------------------****************************');
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    console.log('22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222');                  
-                    if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(getNCons);
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = getNCons.id;
-                    }
-                } else if (!getNCons) {
+                    creep.buildSite(getNCons,ACTIONS);                    
+                } else if (!getNCons) {                    
                     var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(construction[0]);
-                        console.log('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111');                  
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = construction[0].id;
+                    //console.log('buildResult ', creep.build(construction[0]),'construction',construction);                    
+                    var buildResult = creep.buildSite(construction[0],ACTIONS);
+                    if(buildResult != 0) {
+                        console.log('_______________________________construct SPAWN EXTENSIONS__________________________');                                                
+                        var site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
+                        if (site != null) {
+                            if (creep.constructSpawnExtensions(site) != 0) {
+                                console.log('something is up. cannot construct a spawn extension');
+                            };
+                        }                        
                     }
                 } else if (creep.store[RESOURCE_ENERGY] == 0) {
                     //go to default source
-                    console.log('33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
+                    console.log('444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444');
                     var source = creep.getObject(creep.memory.source);
-                    if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(source);
-                        creep.memory.lastAction = ACTIONS.HARVEST;
-                        creep.say('Harvesting');
-                    }
+                    creep.harvestSource(source,ACTIONS);                    
+                } else {
+                    console.log('______________________________________________________________________________');
                 }
             }   
         } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
             console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');                  
             if (creep.store.getFreeCapacity() > 0) {
                 var source = creep.getObject(creep.memory.source);
-
+                //first try to find a container with available energy. If not, go and harvest a source
                 if (containerDeposit != undefined) {
+                    //console.log('HARVEST CONTAINER');
                     var targetContainer = Game.getObjectById(containerDeposit);
-                    if (!creep.pos.inRangeTo(targetContainer,1)) {
-                        console.log('Sittinhg here waiting to build');
-                        creep.moveTo(targetContainer);
-                    }                  
-                    console.log('***************************************************harvest container',JSON.stringify(creep.withdraw(targetContainer)));
-                    if(creep.withdraw(targetContainer,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targetContainer.pos);
-                    }
-
-
-                    
-
+                    creep.harvestContainer(targetContainer,ACTIONS);                                        
                 } else {
-                    if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(source);
-                        creep.memory.lastAction = ACTIONS.HARVEST;
-                        creep.say('11Harvesting');
-                    }
-                }
-                
+                    //harvest source
+                    creep.harvestSource(source,ACTIONS);                       
+                }                
             } else {
-
-                var getNCons = creep.getObject(creep.memory.lastBuild);
-                
-                console.log('3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
+                //GO DO BUILD STUFF
+                var getNCons = creep.getObject(creep.memory.lastBuild);                
+                console.log('***3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
                 if (getNCons) {
-                    if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(getNCons);
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = getNCons.id;
-                    }
+                    creep.buildSite(getNCons,ACTIONS);                
                 } else {
-                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(construction[0]);
-                        console.log('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111');                  
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = construction[0].id;
-                    }
-                }
-
+                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);
+                    creep.buildSite(construction[0],ACTIONS);
+                }                    
             }
-            
         } else {
-
             var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-                creep.say('Harvesting');
-            }
-
+            creep.harvestSource(source,ACTIONS);                        
         }
     },
     // checks if the room needs to spawn a creep

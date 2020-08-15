@@ -39,68 +39,23 @@ var roleUpgrader = {
                 containerDeposit = source.containersBuilt[0];
             };
         });
-        //console.log('containerDeposit ',containerDeposit);
 
         if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
             //go to default source
             var source = creep.getObject(creep.memory.source);
-            // if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-            //     creep.moveTo(source);
-            //     creep.memory.lastAction = ACTIONS.HARVEST;
-            //     creep.say('Harvesting');
-            // }
             if (containerDeposit != undefined) {
                 var targetContainer = Game.getObjectById(containerDeposit);
-                if (!creep.pos.inRangeTo(targetContainer,1)) {
-                    creep.moveTo(targetContainer);
-                }                  
-                if(creep.withdraw(targetContainer,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targetContainer.pos);
-                }
+                creep.harvestContainer(targetContainer,ACTIONS);                
             } else {
-                if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source);
-                    creep.memory.lastAction = ACTIONS.HARVEST;
-                    creep.say('11Harvesting');
-                }
+                creep.harvestSource(source,ACTIONS);
             }
         } else if (creep.store[RESOURCE_ENERGY] == 0) {
             creep.say('Empty');
-            // var source = creep.getObject(creep.memory.source);
-            // if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-            //     creep.moveTo(source);
-            //     creep.memory.lastAction = ACTIONS.HARVEST;
-            // }
             if (containerDeposit != undefined) {
                 var targetContainer = Game.getObjectById(containerDeposit);
-                if (!creep.pos.inRangeTo(targetContainer,1)) {
-                    creep.moveTo(targetContainer);
-                }                  
-                if(creep.withdraw(targetContainer,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targetContainer.pos);
-                }
-                if (containerDeposit != undefined) {
-                    var targetContainer = Game.getObjectById(containerDeposit);
-                    if (!creep.pos.inRangeTo(targetContainer,1)) {
-                        //console.log('Sittinhg here waiting to build');
-                        creep.moveTo(targetContainer);
-                    }                  
-                    if(creep.withdraw(targetContainer,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targetContainer.pos);
-                    }
-                } else {
-                    if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(source);
-                        creep.memory.lastAction = ACTIONS.HARVEST;
-                        creep.say('11Harvesting');
-                    }
-                }
+                creep.harvestContainer(targetContainer,ACTIONS);
             } else {
-                if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source);
-                    creep.memory.lastAction = ACTIONS.HARVEST;
-                    creep.say('11Harvesting');
-                }
+                creep.harvestSource(source,ACTIONS);                                    
             }
         } else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
@@ -110,7 +65,7 @@ var roleUpgrader = {
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution,numberExtensions) {
+    spawn: function(room, level, roleDistribution, numberExtensions) {
         var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
         console.log('Upgraders: ' + roleDistribution.total, room.name);
         if (roleDistribution.total < roleDistribution.min 
