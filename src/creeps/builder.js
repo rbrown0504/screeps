@@ -92,27 +92,29 @@ var builder = {
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
-        console.log('builders: ' + roleDistribution.total, room.name);
+        //var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
+        //console.log('builders: ' + roleDistribution.total, room.name);
         var min = roleDistribution.min;
-        if (room.memory.totalMyConstructionSites > 0 && room.memory.totalMyConstructionSites <= 5) {
-            min = 1;
-        } else if (room.memory.totalMyConstructionSites > 5 && room.memory.totalMyConstructionSites <= 10) {
+        if (room.memory.totalMyConstructionSites > 0 && room.memory.totalMyConstructionSites <= 1) {
             min = 2;
-        } else if (room.memory.totalMyConstructionSites > 10 && room.memory.totalMyConstructionSites <= 15) {
-            min = 3;
-        } else if (room.memory.totalMyConstructionSites > 15 && room.memory.totalMyConstructionSites <= 20) {
+        } else if (room.memory.totalMyConstructionSites > 1 && room.memory.totalMyConstructionSites <= 10) {
             min = 4;
-        } else if (room.memory.totalMyConstructionSites > 20 && room.memory.totalMyConstructionSites <= 25) {
-            min = 5;
-        } else if (room.memory.totalMyConstructionSites > 25 && room.memory.totalMyConstructionSites <= 30) {
+        } else if (room.memory.totalMyConstructionSites > 5 && room.memory.totalMyConstructionSites <= 10) {
+            min = 4;
+        } else if (room.memory.totalMyConstructionSites > 10 && room.memory.totalMyConstructionSites <= 15) {
             min = 6;
-        } else if (room.memory.totalMyConstructionSites > 35 && room.memory.totalMyConstructionSites <= 40) {
-            min = 7;
-        } else if (room.memory.totalMyConstructionSites > 45 && room.memory.totalMyConstructionSites <= 50) {
+        } else if (room.memory.totalMyConstructionSites > 15 && room.memory.totalMyConstructionSites <= 20) {
+            min = 6;
+        } else if (room.memory.totalMyConstructionSites > 20 && room.memory.totalMyConstructionSites <= 25) {
             min = 8;
+        } else if (room.memory.totalMyConstructionSites > 25 && room.memory.totalMyConstructionSites <= 30) {
+            min = 8;
+        } else if (room.memory.totalMyConstructionSites > 35 && room.memory.totalMyConstructionSites <= 40) {
+            min = 10;
+        } else if (room.memory.totalMyConstructionSites > 45 && room.memory.totalMyConstructionSites <= 50) {
+            min = 10;
         } else if (room.memory.totalMyConstructionSites > 55 && room.memory.totalMyConstructionSites <= 60) {
-            min = 9;
+            min = 12;
         }
 
         if (roleDistribution.total < min && 
