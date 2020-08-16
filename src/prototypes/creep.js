@@ -87,16 +87,17 @@ Creep.prototype.harvestSource = function harvestSource(source,ACTIONS) {
     if(result == ERR_NOT_IN_RANGE) {
         this.moveTo(source);
         this.memory.lastAction = ACTIONS.HARVEST;
+        this.memory.lastHarvest = source.id;
         this.say('Harvesting');
     }
     return result;
 }
 
-Creep.prototype.harvestContainer = function harvestContainer(container,ACTIONS) {    
+Creep.prototype.harvestContainer = function harvestContainer(container,ACTIONS) {        
     if (!this.pos.inRangeTo(container,1)) {        
         this.moveTo(container);
     }                      
-    var result = this.withdraw(container,RESOURCE_ENERGY);
+    var result = this.withdraw(container,RESOURCE_ENERGY);    
     if(result == ERR_NOT_IN_RANGE) {
         this.moveTo(container.pos);
         this.memory.lastAction = ACTIONS.HARVEST;
@@ -114,7 +115,6 @@ Creep.prototype.depositEnergy = function depositEnergy(source,ACTIONS) {
     }    
     return result;
 }
-
 
 Creep.prototype.depositContainer = function depositContainer(container,ACTIONS) {
     if (container == null) {
@@ -189,7 +189,7 @@ Creep.prototype.repairWall = function repairWall(site,ACTIONS) {
 
     if (site == null) {
         var targets = this.room.find(FIND_STRUCTURES, {
-            filter: object => object.hits < object.hitsMax && object.structureType != STRUCTURE_WALL
+            filter: object => object.hits < object.hitsMax && object.structureType == STRUCTURE_WALL
         });        
         targets.sort((a,b) => a.hits - b.hits);        
         if(targets.length > 0) {
@@ -298,22 +298,21 @@ Creep.prototype.getBuildSpot = function(creep,theBuildObjectCenter,surroundingSp
 	return buildableSite;
 };
 
-// Creep.prototype.getAvailableResource = function(room) {
-//     // Some kind of unit counter per resource (with Population)
-//     this.room = room;
-// 	var srcs = this.room.find(
-//         FIND_SOURCES, {
-//             filter: function(src) {
-//                 var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-//                 if(targets.length == 0) {
-//                     return true;
-//                 }
+Creep.prototype.getSource = function() {
+    // Some kind of unit counter per resource (with Population)    
+	var srcs = this.room.find(
+        FIND_SOURCES, {
+            filter: function(src) {
+                var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                if(targets.length == 0) {
+                    return true;
+                }
 
-//                 return false;
-//             }
-//     });
-// 	var srcIndex = Math.floor(Math.random()*srcs.length);
+                return false;
+            }
+    });
+	var srcIndex = Math.floor(Math.random()*srcs.length);
 
-// 	return srcs[srcIndex];
-// };
+	return srcs[srcIndex];
+};
 
