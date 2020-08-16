@@ -54,6 +54,7 @@ __modules[0] = function(module, exports) {
 let creepLogic = __require(1,0);
 let roomLogic = __require(2,0);
 let prototypes = __require(3,0);
+const { min } = __require(4,0);
 
 
 module.exports.loop = function () {
@@ -63,59 +64,86 @@ module.exports.loop = function () {
 			total: 0,
 			goalPercentage: 0.3,
 			currentPercentage: 0,
-			max: 2,
-			min: 0,
-			minExtensions: 0			
+			max: 10,
+			min: 2,
+			minExtensions: 0,
+			minTTL: 0,			
         },
         harvester: {
 			total: 0,
 			goalPercentage: 0.3,
 			currentPercentage: 0,
-			max: 2,
-			min: 2,
-			minExtensions: 0			
+			max: 10,
+			min: 6,
+			minExtensions: 0,
+			minTTL: 0,
+		},
+		harvesterLD: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 3,
+			min: 1,
+			minExtensions: 0,
+			minTTL: 0,
 		},
 		upgrader: {
 			total: 0,
 			goalPercentage: 0.2,
 			currentPercentage: 0,
-			max: 3,
-			min: 2,
+			max: 20,
+			min: 5,
 			minExtensions: 0,
+			minTTL: 0,
 		},
 		builder: {
 			total: 0,
 			goalPercentage: 0.25,
 			currentPercentage: 0,
 			max: 15,
-			min: 0,
-			minExtensions: 0
+			min: 2,
+			minExtensions: 0,
+			minTTL: 0,
         },
-        builder1: {
+		repairer: {
 			total: 0,
 			goalPercentage: 0.25,
 			currentPercentage: 0,
-			max: 15,
+			max: 20,
 			min: 0,
-			minExtensions: 0
+			minExtensions: 0,
+			minTTL: 0,
+		},
+		repairerWall: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 5,
+			min: 0,
+			minExtensions: 0,
+			minTTL: 0,
 		},
 
 		
 	};
-	console.log('Role Distribution: ' + JSON.stringify(roleDistribution));	
 	for(var n in Game.myRooms) {
 		var room = Game.myRooms[n];
-		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);
+		var minTTL = 0;
+		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);	
     	_.forEach(totalCreeps, function(creep) {
 			let role = creep.memory.role;
 			roleDistribution[role].total++;	
-			
+			if (minTTL == 0) {
+				minTTL = creep.ticksToLive;
+			} else if (minTTL < creep.ticksToLive) {
+				minTTL = creep.ticksToLive;
+			}			
 		});
-	}
-    _.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));    	
+	}	
 	_.forEach(Game.myRooms, r => roomLogic.resources(r));
 	_.forEach(Game.myRooms, r => roomLogic.construction(r));	
 	_.forEach(Game.myRooms, r => roomLogic.population(r));	    
+	_.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
 	_.forEach(Game.myRooms, r => roomLogic.defense(r));    
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
@@ -130,6 +158,8 @@ module.exports.loop = function () {
             console.log('Clearing non-existing creep memory:', name);
         }
 	}
+
+
 }
 return module.exports;
 }
@@ -137,9 +167,14 @@ return module.exports;
 /********** Start module 1: C:\Users\RBROW\screeps\src\creeps\index.js **********/
 __modules[1] = function(module, exports) {
 let creepLogic = {
-    harvester:     __require(4,1),
-    upgrader:      __require(5,1),
-    builder:      __require(6,1),
+    harvester:     __require(5,1),
+    harvesterLD:     __require(6,1),
+    carrier:      __require(7,1),
+    upgrader:      __require(8,1),
+    builder:      __require(9,1),
+    repairer:      __require(10,1),
+    repairerWall:      __require(11,1),
+    
 }
 
 module.exports = creepLogic;
@@ -149,11 +184,11 @@ return module.exports;
 /********** Start module 2: C:\Users\RBROW\screeps\src\room\index.js **********/
 __modules[2] = function(module, exports) {
 let roomLogic = {
-    spawning:     __require(7,2),
-    defense:     __require(8,2),
-    resources:     __require(9,2),
-    construction:     __require(10,2),
-    population:     __require(11,2),
+    spawning:     __require(12,2),
+    defense:     __require(13,2),
+    resources:     __require(14,2),
+    construction:     __require(15,2),
+    population:     __require(16,2),
 }
 
 module.exports = roomLogic;
@@ -163,742 +198,14 @@ return module.exports;
 /********** Start module 3: C:\Users\RBROW\screeps\src\prototypes\index.js **********/
 __modules[3] = function(module, exports) {
 let files = {
-    creep: __require(12,3)
+    creep: __require(17,3)
     
 }
 return module.exports;
 }
 /********** End of module 3: C:\Users\RBROW\screeps\src\prototypes\index.js **********/
-/********** Start module 4: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
+/********** Start module 4: C:\Users\RBROW\screeps\node_modules\lodash\lodash.js **********/
 __modules[4] = function(module, exports) {
-const { map } = __require(13,4);
-
-var harvester = {
-
-    /** @param {Creep} creep **/
-    run: function(creep,roleDistribution) {
-        var ACTIONS = {
-            HARVEST: 1,
-            DEPOSIT: 2,
-            BUILD: 3,
-            UPGRADE: 4
-        };
-        var continueDeposit = false;
-        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.DEPOSIT) {
-            continueDeposit = true;
-        }
-        var continueBuild = false;
-        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
-            continueBuild = true;
-        }
-        if (creep.memory.sourceRoom == undefined) {
-            creep.memory.sourceRoom = creep.room.name;
-        }
-        if (creep.memory.source == undefined) {      
-            var srcs = creep.room.find(
-                FIND_SOURCES, {
-                    filter: function(src) {
-                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-                        if(targets.length == 0) {
-                            return true;
-                        }
-        
-                        return false;
-                    }
-            });
-            var srcIndex = Math.floor(Math.random()*srcs.length);
-            creep.memory.source = srcs[srcIndex].id;            
-        }        
-        var harvesterBuildContainer = false;
-        var harvesterContainers = new Array();
-        if (creep.room.memory.sources[0].containersNear.length > 0) {            
-            _.forEach(creep.room.memory.sources[0].containersNear, function(theSource) {
-                var sourceSplit = theSource.split("__");
-                if (sourceSplit[1] == 'underConstruction' && roleDistribution['builder'].total == 0) {                    
-                    harvesterBuildContainer = true;
-                    harvesterContainers.push(sourceSplit[0]);                    
-                }
-            });
-        } else if (creep.room.memory.sources.length < 2) {
-            _.forEach(creep.room.memory.sources[1].containersNear, function(theSource) {
-                var sourceSplit = theSource.split("__");
-                if (sourceSplit[1] == 'underConstruction' && roleDistribution['builder'].total == 0) {                    
-
-                    harvesterBuildContainer = true;
-                    harvesterContainers.push(sourceSplit[0]);                    
-                }
-            });
-        }
-        if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
-            var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-                creep.say('xHarvesting');
-            }
-        } else if (creep.store[RESOURCE_ENERGY] == 0) {
-            creep.say('Empty');
-            var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-            }
-        } else {            
-            console.log('-***********************************here');            
-            if (creep.store[RESOURCE_ENERGY] == 0) {
-                creep.say('Empty');
-                var source = creep.getObject(creep.memory.source);
-                if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source);
-                    creep.memory.lastAction = ACTIONS.HARVEST;
-                }             
-            } else if (creep.room.memory.sourceNeedsContainer == true) {
-                console.log('Construct a Container');
-                var sourceId = creep.room.memory.sourcesNeedingContainer[0];                
-                var constructionSource;
-                _.forEach(creep.room.memory.sources, function(source) {
-                    if (source.id == sourceId) {
-                        constructionSource = source;
-                    }
-                });
-                var top =0;
-                var left = -3;
-                var bottom = +3; 
-                var right = 0;
-                const lookLowerLeft = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);                    
-                var filterForLowerLeft = _.filter(lookLowerLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
-                console.log('filterForfilterFor ' + filterForLowerLeft, filterForLowerLeft.length);
-                top = -3;
-                left = -3;
-                bottom = 0; 
-                right = 0;
-                const lookUpperLeft = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
-                var filterForUpperLeft = _.filter(lookUpperLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
-                top = -3;
-                left = 0;
-                bottom = 0; 
-                right = 3;
-                const lookUpperRight = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
-                var filterForUpperRight = _.filter(lookUpperRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
-                top = 0;
-                left = 0;
-                bottom = +3;
-                right = 3;
-                const lookLowerRight = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
-                var filterForLowerRight = _.filter(lookLowerRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
-                
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerLeft.length + ' buildable areas in the lower left quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperLeft.length + ' buildable areas in the upper left quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperRight.length + ' buildable areas in the upper right quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerRight.length + ' buildable areas in the lower right quadrant 3 range.');                
-                if (filterForLowerLeft.length > 0 ) {
-                    console.log('create a construction site');
-                    creep.moveTo(filterForLowerLeft[0].pos);
-                    Game.spawns['Spawn1'].room.createConstructionSite(creep.pos.x,creep.pos.y, STRUCTURE_CONTAINER);                    
-                }
-                if (!creep.pos.inRangeTo(constructionSource,3)) {
-                    console.log('Sittinhg here waiting to build');
-                    creep.moveTo(constructionSource);
-                }                  
-            } else if (creep.memory.lastAction == ACTIONS.BUILD) {                
-                var target = Game.getObjectById(creep.memory.lastBuild);
-                if (!creep.pos.inRangeTo(target,3)) {
-                    console.log('Sittinhg here waiting to build');
-                    creep.moveTo(target);                        
-                }
-                if(creep.build(target) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = target.id;
-                }
-            } else if (harvesterBuildContainer) {                
-                var target = Game.getObjectById(harvesterContainers[0]);
-                if (!creep.pos.inRangeTo(target,3)) {
-                    console.log('Sittinhg here waiting to build');
-                    creep.moveTo(target);                        
-                }
-                if(creep.build(target) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = target.id;
-                }
-            } else {     
-                if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(Game.spawns['Spawn1']);
-                }    
-            }
-        }        
-    },
-    spawn: function(room, level, roleDistribution,numberExtensions) {
-        var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
-        console.log('Harvesters: ' + roleDistribution.total, room.name);        
-        if (roleDistribution.total < roleDistribution.min 
-            && numberExtensions >= roleDistribution.minExtensions 
-            && roleDistribution.total <= roleDistribution.max) {
-            return true;
-        }
-    },
-    spawnData: function(room, level) {
-            let name = 'harvester' + Game.time;
-            let memory = {role: 'harvester'};
-            if(level <= 1) {
-                let body = [WORK, CARRY, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 2) {
-                let body = [WORK, WORK, CARRY, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 3) {
-                let body = [WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 4) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 5) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 6) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 7) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 8) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 9) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level >= 10) {
-                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            }
-    }
-};
-
-module.exports = harvester;
-return module.exports;
-}
-/********** End of module 4: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
-/********** Start module 5: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
-__modules[5] = function(module, exports) {
-var roleUpgrader = {
-
-    /** @param {Creep} creep **/
-    run: function(creep) {
-        var ACTIONS = {
-            HARVEST: 1,
-            DEPOSIT: 2,
-            BUILD: 3,
-            UPGRADE: 4
-        };
-        if (creep.memory.sourceRoom == undefined) {
-            creep.memory.sourceRoom = creep.room.name;
-        }
-        var continueUpgrade = false;
-        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.UPGRADE) {
-            continueUpgrade = true;
-        }
-        if (creep.memory.source == undefined) {
-            var srcs = creep.room.find(
-                FIND_SOURCES, {
-                    filter: function(src) {
-                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-                        if(targets.length == 0) {
-                            return true;
-                        }
-        
-                        return false;
-                    }
-            });
-            var srcIndex = Math.floor(Math.random()*srcs.length);
-            creep.memory.source = srcs[srcIndex].id;  
-        }
-
-        if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
-            var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-                creep.say('Harvesting');
-            }
-        } else if (creep.store[RESOURCE_ENERGY] == 0) {
-            creep.say('Empty');
-            var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-            }
-        } else {
-            if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(creep.room.controller);
-                creep.memory.lastAction = ACTIONS.UPGRADE;
-            }
-        }
-    },
-    spawn: function(room, level, roleDistribution,numberExtensions) {
-        var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
-        console.log('Upgraders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min 
-            && numberExtensions >= roleDistribution.minExtensions
-            && roleDistribution.total <= roleDistribution.max) {
-            return true;
-        }
-    },
-    spawnData: function(room, level) {
-            let name = 'Upgrader' + Game.time;
-            let memory = {role: 'upgrader'};
-            if(level <= 1) {
-                let body = [WORK, CARRY, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 2) {
-                let body = [WORK, WORK, CARRY, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 3) {
-                let body = [WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 4) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 5) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 6) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 7) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 8) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 9) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level >= 10) {
-                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            }
-    }
-};
-
-module.exports = roleUpgrader;
-return module.exports;
-}
-/********** End of module 5: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
-/********** Start module 6: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
-__modules[6] = function(module, exports) {
-var builder = {
-
-    /** @param {Creep} creep **/
-    run: function(creep) {
-        var ACTIONS = {
-            HARVEST: 1,
-            DEPOSIT: 2,
-            BUILD: 3
-        };
-        if (creep.memory.sourceRoom == undefined) {
-            creep.memory.sourceRoom = creep.room.name;
-        }
-        var continueBuild = false;
-        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
-            continueBuild = true;
-        }
-        if (creep.memory.source == undefined) {
-            var srcs = creep.room.find(
-                FIND_SOURCES, {
-                    filter: function(src) {
-                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-                        if(targets.length == 0) {
-                            return true;
-                        }        
-                        return false;
-                    }
-            });
-            var srcIndex = Math.floor(Math.random()*srcs.length);
-            creep.memory.source = srcs[srcIndex].id;  
-        }
-        console.log('continueBuild ' + continueBuild);
-        if(creep.store[RESOURCE_ENERGY] != 0 && continueBuild) {
-            if (creep.memory.lastBuild == undefined) {                
-                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(construction[0]);
-                    console.log('vbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabuilder123091203912039120312039123');                  
-                    creep.memory.lastAction = ACTIONS.BUILD;
-                    creep.memory.lastBuild = construction[0].id;
-                }
-            } else {
-                var getNCons = creep.getObject(creep.memory.lastBuild);
-                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    console.log('cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvbuilder123091203912039120312039123');                  
-                    if(creep.build(getNCons) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(getNCons);
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = getNCons.id;
-                    }
-                } else if (creep.store[RESOURCE_ENERGY] > 0) {
-                    console.log('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeebuilder123091203912039120312039123');
-                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    if(creep.build(construction[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(construction[0]);
-                        creep.memory.lastAction = ACTIONS.BUILD;
-                        creep.memory.lastBuild = construction[0].id;
-                    }
-                } else {
-                    console.log('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-                    creep.say('Empty');
-                    var sources = creep.room.find(FIND_SOURCES);
-                    if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(sources[0]);
-                        creep.memory.lastAction = ACTIONS.HARVEST;
-                    }
-                }
-            }
-            
-        } else if (creep.store[RESOURCE_ENERGY] == 0) {
-            var source = creep.getObject(creep.memory.source);
-            if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-                creep.say('Harvesting');
-            }
-        } else {
-            console.log('elllllllllllllllllllllllllllllllsssssssssssssssssssssssseeeeeeeeeeeeeeeeee');
-            
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-                creep.memory.lastAction = ACTIONS.HARVEST;
-            }
-            
-        }
-    },
-    spawn: function(room, level, roleDistribution,numberExtensions) {
-        var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
-        console.log('builders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min && 
-            numberExtensions >= roleDistribution.minExtensions && 
-            roleDistribution.total <= roleDistribution.max) {
-            return true;
-        }
-    },
-    spawnData: function(room, level) {
-            let name = 'builder' + Game.time;
-            let memory = {role: 'builder'};
-            if(level <= 1) {                
-                let body = [WORK, CARRY, MOVE];                
-                return {name, body, memory};
-            } else
-            if(level <= 2) {
-                let body = [WORK, WORK, CARRY, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 3) {
-                let body = [WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 4) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 5) {
-                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 6) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 7) {
-                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 8) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level <= 9) {
-                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            } else
-            if(level >= 10) {
-                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
-                return {name, body, memory};
-            }
-    }
-};
-
-module.exports = builder;
-return module.exports;
-}
-/********** End of module 6: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
-/********** Start module 7: C:\Users\RBROW\screeps\src\room\spawning.js **********/
-__modules[7] = function(module, exports) {
-let creepLogic = __require(1,7);
-let creepTypes = _.keys(creepLogic);
-
-function spawnCreeps(room,roleDistribution) {
-    _.forEach(creepTypes, type => console.log(type));
-
-    var creeps = room.find(FIND_MY_CREEPS);
-    var totalCreeps = 0;
-    var i = 0;
-	for(var n in creeps) {
-        totalCreeps++;
-	}
-    var populationLevelMultiplier = 8;
-    var creepLevel = totalCreeps / populationLevelMultiplier;
-
-    var deposits = room.find(FIND_STRUCTURES);
-    var fullDeposits = 0;
-    var numberExtensions = 0;
-    for(var i = 0; i < deposits.length; i++) {
-        var deposit = deposits[i];        
-        if (deposit.structureType == STRUCTURE_EXTENSION || deposit.structureType == STRUCTURE_SPAWN) {
-            if(deposit.energy == deposit.energyCapacity) {
-                fullDeposits++;
-            }
-            if (deposit.structureType == STRUCTURE_EXTENSION) {
-                numberExtensions++
-            }
-        }
-    }
-    console.log('Total Deposits: ' + deposits.length + ' , ' + 'Full Deposits: ' + fullDeposits);
-    var resourceLevel = fullDeposits / 5;
-    var level = Math.floor(creepLevel + resourceLevel);    
-	if(totalCreeps < 5){
-        console.log('Level Under 5:  ' + level);
-	    level = 1;
-	}
-    console.log('Level:  ' + level);
-    let creepTypeNeeded = _.find(creepTypes, function(type) {
-        return creepLogic[type].spawn(room,level,roleDistribution[type],numberExtensions);
-    });
-    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level); 
-    console.log('total creeps: ' + totalCreeps + ' population multiplier ' + populationLevelMultiplier + ' creep level ' + creepLevel + ' resourceLevel ' + resourceLevel);
-
-    if (creepSpawnData) {
-        let spawn = room.find(FIND_MY_SPAWNS)[0];
-        let result = spawn.spawnCreep(creepSpawnData.body, creepSpawnData.name, {memory: creepSpawnData.memory});
-    
-        console.log("Tried to Spawn:", creepTypeNeeded, result)
-    }
-}
-
-module.exports = spawnCreeps;
-return module.exports;
-}
-/********** End of module 7: C:\Users\RBROW\screeps\src\room\spawning.js **********/
-/********** Start module 8: C:\Users\RBROW\screeps\src\room\defense.js **********/
-__modules[8] = function(module, exports) {
-let creepLogic = __require(1,8);
-let creepTypes = _.keys(creepLogic);
-
-function defense(room) {
-
-    var towers = room.find(FIND_STRUCTURES, { filter: { structureType: STRUCTURE_TOWER }});
-    if (towers.length) {
-        _.forEach(towers, function(tower) {
-            console.log(tower);
-            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES,{ filter: (structure) => structure.hits < structure.hitsMax});
-            if (closestDamagedStructure) {
-                tower.repair(closestDamagedStructure);
-            }
-            var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-            if (closestHostile) {
-                tower.attack(closestHostile);
-            }
-        });
-    }
-}
-
-module.exports = defense;
-return module.exports;
-}
-/********** End of module 8: C:\Users\RBROW\screeps\src\room\defense.js **********/
-/********** Start module 9: C:\Users\RBROW\screeps\src\room\resources.js **********/
-__modules[9] = function(module, exports) {
-let creepLogic = __require(1,9);
-let creepTypes = _.keys(creepLogic);
-
-function resources(room) {
-    room.memory.sources = null;
-    var sources = room.find(
-        FIND_SOURCES, {
-            filter: function(src) {
-                var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-                if(targets.length == 0) {
-                    return true;
-                }
-
-                return false;
-            }
-    });    
-    room.memory.sources = sources;
-    
-    room.memory.sourceNeedsContainer = false;
-    var sourcesInRangeToContainer = new Array();              
-    _.forEach(room.memory.sources, function(source) {
-        source.containersNear = null;
-        var newArray = new Array();
-        source.containersNear = newArray;
-        var theSource = Game.getObjectById(source.id);
-        var targets = theSource.pos.findInRange(FIND_STRUCTURES, 3);
-        _.forEach(targets, function(target) {
-            if (target.structureType == STRUCTURE_CONTAINER) {
-                sourcesInRangeToContainer.push(source.id);
-                source.hasContainer = true;
-
-                if (!source.containersNear.includes(target.id + '__' + target.structureType)) {
-                    source.containersNear.push(target.id + '__' + target.structureType);
-                    var existing = source.containersNear;
-                    existing.push(target.id + '__' + target.structureType);
-                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
-                    source.containersNear = unique;
-                }
-            };
-        });
-        var targets = theSource.pos.findInRange(FIND_CONSTRUCTION_SITES, 3);
-        _.forEach(targets, function(target) {
-            if (target.structureType == STRUCTURE_CONTAINER) {
-                sourcesInRangeToContainer.push(source.id);
-                source.hasContainer = true;
-                if (!source.containersNear.includes(target.id + '__underConstruction')) {
-                    source.containersNear.push(target.id + '__underConstruction');
-                    var existing = source.containersNear;
-                    existing.push(target.id + '__underConstruction');
-                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
-                    source.containersNear = unique;
-                }       
-            }
-        });
-    });
-    console.log('Sources in range (3) of a container ' + sourcesInRangeToContainer + ' sources length ' + sources.length + ' sources container length ' + sourcesInRangeToContainer.length);
-    
-    if (sources.length > sourcesInRangeToContainer.length) {
-        var sourcesNeedingContainer = new Array();
-        _.forEach(sources, function(source) {
-            if (!sourcesInRangeToContainer.includes(source.id)) {
-                sourcesNeedingContainer.push(source.id);
-            }                       
-        });
-        if (sourcesNeedingContainer.length > 0) {
-            room.memory.sourceNeedsContainer = true;
-            room.memory.sourcesNeedingContainer = sourcesNeedingContainer;
-        } else {
-            room.memory.sourceNeedsContainer = false;
-            room.memory.sourcesNeedingContainer = null;
-        }        
-    } else if (sources.length == sourcesInRangeToContainer.length) {
-        console.log('there is at least one container next to each source');
-    }
-}
-
-module.exports = resources;
-return module.exports;
-}
-/********** End of module 9: C:\Users\RBROW\screeps\src\room\resources.js **********/
-/********** Start module 10: C:\Users\RBROW\screeps\src\room\construction.js **********/
-__modules[10] = function(module, exports) {
-let creepLogic = __require(1,10);
-let creepTypes = _.keys(creepLogic);
-
-function construction(room) {    
-    room.memory.totalConstructionSites = 0;
-    room.memory.totalHostileConstructionSites = 0;    
-    room.memory.totalContainers = 0;    
-    room.memory.totalStructures = 0;   
-    room.memory.totalMyConstructionSites = 0;    
-    var constructionSites = _.filter(Game.constructionSites, (site) => site.room.name == room.name);;
-    _.forEach(constructionSites, function(site) {
-        room.memory.totalConstructionSites++;
-        if (site.my) {
-            room.memory.totalMyConstructionSites++;            
-        } else {
-            room.memory.totalHostileConstructionSites++;
-        };
-    });    
-    var myStructures = room.find(FIND_STRUCTURES);
-    _.forEach(myStructures, function(structure) {
-        room.memory.totalStructures++;
-        if (structure.structureType == STRUCTURE_CONTAINER) {
-            room.memory.totalContainers++;		
-        } 
-    });    
-}
-
-module.exports = construction;
-return module.exports;
-}
-/********** End of module 10: C:\Users\RBROW\screeps\src\room\construction.js **********/
-/********** Start module 11: C:\Users\RBROW\screeps\src\room\population.js **********/
-__modules[11] = function(module, exports) {
-let creepLogic = __require(1,11);
-let creepTypes = _.keys(creepLogic);
-
-function population(room) {    
-    room.memory.totalCreeps = 0;
-    room.memory.totalMyCreeps = 0;
-    room.memory.totalHostileCreeps = 0;    
-    var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);;
-    _.forEach(totalCreeps, function(creep) {
-        room.memory.totalCreeps++;
-        if (creep.my) {				
-            room.memory.totalMyCreeps++;
-        } else {
-            room.memory.totalHostileCreeps++;
-        }
-    });    
-}
-
-module.exports = population;
-return module.exports;
-}
-/********** End of module 11: C:\Users\RBROW\screeps\src\room\population.js **********/
-/********** Start module 12: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
-__modules[12] = function(module, exports) {
-Creep.prototype.sayHello = function sayHello() {
-    this.say("Hello", true);
-}
-
-Creep.prototype.sayDebug = function sayHello() {
-    this.say("Debug", true);
-}
-
-Creep.prototype.getObject = function(id) {
-	return Game.getObjectById(id);
-};
-
-Creep.prototype.getRoomSource = function(id) {
-    _.forEach(room.memory.sources, function(source) {
-        if (source.id == id) {
-            return source;
-        }
-    });
-};
-return module.exports;
-}
-/********** End of module 12: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
-/********** Start module 13: C:\Users\RBROW\screeps\node_modules\lodash\lodash.js **********/
-__modules[13] = function(module, exports) {
 /**
  * @license
  * Lodash <https://lodash.com/>
@@ -17886,7 +17193,1765 @@ __modules[13] = function(module, exports) {
 
 return module.exports;
 }
-/********** End of module 13: C:\Users\RBROW\screeps\node_modules\lodash\lodash.js **********/
+/********** End of module 4: C:\Users\RBROW\screeps\node_modules\lodash\lodash.js **********/
+/********** Start module 5: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
+__modules[5] = function(module, exports) {
+const { map } = __require(4,5);
+
+var harvester = {
+
+    /** @param {Creep} creep **/
+    run: function(creep,roleDistribution) {
+        var DEPOSIT_FOR = {
+            CONSTRUCTION: 1,
+            POPULATION: 2
+        }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        var continueDeposit = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.DEPOSIT) {
+            continueDeposit = true;
+        }
+        var continueBuild = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            continueBuild = true;
+        }
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        if (creep.memory.source == undefined) {      
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }
+        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;            
+        }
+
+        var deposits = creep.getOpenDeposits();
+
+        var spawns = [];
+        for(var n in Game.spawns) { 
+            var s = Game.spawns[n];
+            if(s.room == creep.room) {
+                spawns.push(s);
+            }
+        }        
+        var depositFor;
+        if(deposits == 0 && spawns[0].energy == spawns[0].energyCapacity) {
+            depositFor = DEPOSIT_FOR.CONSTRUCTION;
+        } else {
+            depositFor = DEPOSIT_FOR.POPULATION;
+        }                
+        var harvesterBuildContainer = false;
+        var sourceContainer = false;
+        var harvesterContainersToBuild = new Array();
+        var harvesterContainers = new Array();
+        _.forEach(creep.room.memory.sources, function(source) {
+            if (source.containersNear.length > 0) {            
+                _.forEach(source.containersNear, function(theSource) {
+                    var sourceSplit = theSource.split("__");
+                    if (sourceSplit[1] == 'underConstruction') {                    
+                        harvesterContainersToBuild.push(sourceSplit[0]);                    
+                        if (roleDistribution['builder'].total == 0) {
+                            harvesterBuildContainer = true;
+                        }             
+                        
+                    } else if (sourceSplit[1] == 'container') {
+                        sourceContainer = true;
+                        harvesterContainers.push(sourceSplit[0]);                    
+                    }
+                });
+            }
+        });
+        if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestSource(source,ACTIONS);
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestSource(source,ACTIONS);
+        } else {                   
+            if (creep.store[RESOURCE_ENERGY] == 0) {
+                creep.say('Empty');
+                var source = creep.getObject(creep.memory.source);
+                creep.harvestSource(source,ACTIONS);                
+            } else if (creep.room.memory.sourceNeedsContainer == true) {
+                var site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
+                if (site != null) {
+                    if (creep.constructSpawnExtensions(site) != 0) {
+                    };
+                }
+                var sourceId = creep.room.memory.sourcesNeedingContainer[0];                
+                var constructionSource = creep.getObject(sourceId);
+                var top =0;
+                var left = -3;
+                var bottom = +3; 
+                var right = 0;
+                const lookLowerLeft = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);                    
+                var filterForLowerLeft = _.filter(lookLowerLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+                top = -3;
+                left = -3;
+                bottom = 0; 
+                right = 0;
+                const lookUpperLeft = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
+                var filterForUpperLeft = _.filter(lookUpperLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+                top = -3;
+                left = 0;
+                bottom = 0; 
+                right = 3;
+                const lookUpperRight = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
+                var filterForUpperRight = _.filter(lookUpperRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+                top = 0;
+                left = 0;
+                bottom = +3;
+                right = 3;
+                const lookLowerRight = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
+                var filterForLowerRight = _.filter(lookLowerRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+                if (filterForLowerLeft.length > 0 ) {
+                    creep.moveTo(filterForLowerLeft[0].pos);
+                    Game.spawns['Spawn1'].room.createConstructionSite(creep.pos.x,creep.pos.y, STRUCTURE_CONTAINER);                    
+                }
+                if (!creep.pos.inRangeTo(constructionSource,3)) {
+                    creep.moveTo(constructionSource);
+                }                  
+            } else if (creep.memory.lastAction == ACTIONS.BUILD) {      
+                var getNCons = creep.getObject(creep.memory.lastBuild);
+                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
+                    creep.buildSite(getNCons,ACTIONS);
+                } else {
+                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                    creep.buildSite(construction[0],ACTIONS);                    
+                }
+            } else if (harvesterBuildContainer && depositFor != DEPOSIT_FOR.POPULATION) {     
+                var target = Game.getObjectById(harvesterContainersToBuild[0]);
+                creep.buildSite(target,ACTIONS);
+            } else if (depositFor == DEPOSIT_FOR.CONSTRUCTION) {
+                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                creep.buildSite(construction[0],ACTIONS);                
+            } else {     
+                if (roleDistribution['carrier'].total > 1) {
+                    creep.depositContainer(null,ACTIONS);
+                } else {
+                    creep.deposit(null,ACTIONS)
+                }
+            }
+        }        
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+        switch(room.memory.numberExtensions) {
+            case 0:
+                min = 4;
+                break;
+            case 1:
+                min = 6;
+                break;
+            case 2:
+                min = 6;
+                break;
+            case 3:
+                min = 6;
+                break;
+            case 4:
+                min = 6;
+                break;            
+            case 5:
+                min = 6;
+                break;                        
+        }
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions 
+            && roleDistribution.total <= roleDistribution.max) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'harvester' + Game.time;
+            let memory = {role: 'harvester'};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = harvester;
+return module.exports;
+}
+/********** End of module 5: C:\Users\RBROW\screeps\src\creeps\harvester.js **********/
+/********** Start module 6: C:\Users\RBROW\screeps\src\creeps\harvesterLD.js **********/
+__modules[6] = function(module, exports) {
+const { map } = __require(4,6);
+
+var harvesterLD = {
+
+    /** @param {Creep} creep **/
+    run: function(creep,roleDistribution) {
+        var DEPOSIT_FOR = {
+            CONSTRUCTION: 1,
+            POPULATION: 2
+        }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        var continueDeposit = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.DEPOSIT) {
+            continueDeposit = true;
+        }
+        var continueBuild = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            continueBuild = true;
+        }
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+
+        if (creep.memory.targetRoom == undefined) {
+            creep.memory.targetRoom = 'W6N9';
+        }
+        if (creep.memory.sourceRoom == creep.room.name) {
+            creep.depositContainer(null,ACTIONS);
+            if (creep.store[RESOURCE_ENERGY] == 0) {
+                var exit = creep.room.findExitTo(creep.memory.targetRoom);
+                creep.moveTo(creep.pos.findClosestByRange(exit));    
+            }
+        } if (creep.memory.targetRoom == creep.room.name) {
+            if (creep.store.getFreeCapacity()>0 && creep.memory.lastAction != ACTIONS.HARVEST) {                
+                var source = creep.getSource();
+                creep.harvestSource(source,ACTIONS);
+            } else if (creep.memory.lastAction == ACTIONS.HARVEST & creep.store.getFreeCapacity()>0) {
+                var source = creep.getObject(creep.memory.lastHarvest);
+                creep.harvestSource(source,ACTIONS);
+            } else {
+                var exit = creep.room.findExitTo(creep.memory.sourceRoom);
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }            
+        }            
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+        switch(room.memory.numberExtensions) {
+            case 0:
+                min = 0;
+                break;
+            case 1:
+                min = 0;
+                break;
+            case 2:
+                min = 1;
+                break;
+            case 3:
+                min = 1;
+                break;
+            case 4:
+                min = 0;
+                break;            
+            case 5:
+                min = 0;
+                break;                        
+        }        
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions 
+            && roleDistribution.total <= roleDistribution.max) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'harvesterLD' + Game.time;
+            let memory = {role: 'harvesterLD', targetRoom: 'W6N9'};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = harvesterLD;
+return module.exports;
+}
+/********** End of module 6: C:\Users\RBROW\screeps\src\creeps\harvesterLD.js **********/
+/********** Start module 7: C:\Users\RBROW\screeps\src\creeps\carrier.js **********/
+__modules[7] = function(module, exports) {
+const { map } = __require(4,7);
+
+var carrier = {
+
+    /** @param {Creep} creep **/
+    run: function(creep,roleDistribution) {
+        var DEPOSIT_FOR = {
+            CONSTRUCTION: 1,
+            POPULATION: 2
+        }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        var continueDeposit = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.DEPOSIT) {
+            continueDeposit = true;
+        }
+        var continueBuild = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            continueBuild = true;
+        }
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        if (creep.memory.source == undefined) {      
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }
+        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;            
+        }
+
+        var deposits = creep.getOpenDeposits();
+        var spawns = [];
+        for(var n in Game.spawns) { 
+            var s = Game.spawns[n];
+            if(s.room == creep.room) {
+                spawns.push(s);
+            }
+        }        
+        var depositFor;
+        if(deposits == 0 && spawns[0].energy == spawns[0].energyCapacity) {
+            depositFor = DEPOSIT_FOR.CONSTRUCTION;
+        } else {
+            depositFor = DEPOSIT_FOR.POPULATION;
+        }        
+        if(creep.store.getFreeCapacity() > 0 && creep.memory.lastAction != ACTIONS.DEPOSIT) {
+            var containers = creep.getHarvestContainers();
+            if (containers.length > 0) {
+                creep.harvestContainer(containers[0],ACTIONS);
+            }
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            var containers = creep.getHarvestContainers();
+            if (containers.length > 0) {
+
+                creep.harvestContainer(containers[0],ACTIONS);
+            }            
+        } else if (creep.memory.lastAction == ACTIONS.DEPOSIT) {
+            creep.deposit(deposits[0],ACTIONS);
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
+            var containers = creep.getHarvestContainers();
+
+            if (creep.store.getFreeCapacity() == 0) {
+                if (deposits.length > 0) {
+                    creep.deposit(deposits[0],ACTIONS);
+                } else {
+                    console.log('CARRIER: Deposits Full');
+                }                                
+            } else {
+                if (containers.length > 0) {
+                    creep.harvestContainer(containers[0],ACTIONS);
+                }                                             
+            }
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            var containers = creep.getHarvestContainers();
+
+            if (containers.length > 0) {
+                creep.harvestContainer(containers[0],ACTIONS);
+            }            
+        } else {   
+            var containers = creep.getHarvestContainers();
+            if (containers.length > 0) {
+                creep.harvestContainer(containers[0],ACTIONS);
+            }         
+        }                
+                 
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+
+        switch(room.memory.numberExtensions) {
+            case 0:
+                min = 0;
+                break;
+            case 1:
+                min = 2;
+                break;
+            case 2:
+                min = 4;
+                break;
+            case 3:
+                min = 6;
+                break;
+            case 4:
+                min = 6;
+                break;            
+            case 5:
+                min = 6;
+                break;                        
+        }
+
+        switch(room.memory.totalContainers) {
+            case 0:
+                min = 0;
+                break;
+            case 1:
+                min = 2;
+                break;
+            case 2:
+                min = 4;
+                break;
+            case 3:
+                min = 6;
+                break;
+            case 4:
+                min = 8;
+                break;            
+            case 5:
+                min = 10;
+                break;                        
+        }
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions 
+            && roleDistribution.total <= roleDistribution.max) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'carrier' + Game.time;
+            let memory = {role: 'carrier'};
+            if(level <= 1) {
+                let body = [CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [CARRY, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY,  CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = carrier;
+return module.exports;
+}
+/********** End of module 7: C:\Users\RBROW\screeps\src\creeps\carrier.js **********/
+/********** Start module 8: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
+__modules[8] = function(module, exports) {
+var roleUpgrader = {
+
+    /** @param {Creep} creep **/
+    run: function(creep) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        var continueUpgrade = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.UPGRADE) {
+            continueUpgrade = true;
+        }
+        if (creep.memory.source == undefined) {
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }
+        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
+        }
+
+        if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestEnergy(source,ACTIONS);
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            creep.harvestEnergy(source,ACTIONS);            
+        } else {
+            if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.controller);
+                creep.memory.lastAction = ACTIONS.UPGRADE;
+            }
+        }
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+        switch(room.controller.level) {
+            case 0:
+                min = 2;
+                break;
+            case 1:
+                min = 4;
+                break;
+            case 2:
+                min = 6;
+                break;
+            case 3:
+                min = 8;
+                break;
+            case 4:
+                min = 10;
+                break;            
+            case 5:
+                min = 12;
+                break;                        
+        }
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions
+            && roleDistribution.total <= roleDistribution.max) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'Upgrader' + Game.time;
+            let memory = {role: 'upgrader'};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = roleUpgrader;
+return module.exports;
+}
+/********** End of module 8: C:\Users\RBROW\screeps\src\creeps\upgrader.js **********/
+/********** Start module 9: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
+__modules[9] = function(module, exports) {
+var builder = {
+
+    /** @param {Creep} creep **/
+    run: function(creep) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            CONSTRUCT: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        if (creep.memory.source == undefined) {
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
+        }
+
+        var containerDeposit;
+        _.forEach(creep.room.memory.sources, function(source) {
+            if (source.containersBuilt.length > 0) { 
+                containerDeposit = source.containersBuilt[0];
+            };
+        });
+        
+        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
+            if (creep.memory.lastBuild == undefined) {                     
+                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                creep.buildSite(construction[0],ACTIONS);                
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);
+                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
+                    creep.buildSite(getNCons,ACTIONS);                    
+                } else if (!getNCons) {                    
+                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
+                    var buildResult = creep.buildSite(construction[0],ACTIONS);
+                    if(buildResult != 0) {
+                        var site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
+                        if (site != null) {
+                            if (creep.constructSpawnExtensions(site) != 0) {
+                            };
+                        }                        
+                    }
+                } else if (creep.store[RESOURCE_ENERGY] == 0) {
+                    var source = creep.getObject(creep.memory.source);
+                    creep.harvestEnergy(source,ACTIONS);
+                } else {
+                }
+            }   
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
+            if (creep.store.getFreeCapacity() > 0) {
+                var source = creep.getObject(creep.memory.source);
+                creep.harvestEnergy(source,ACTIONS);                                
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);                
+                if (getNCons) {
+                    creep.buildSite(getNCons,ACTIONS);                
+                } else {
+                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);
+                    creep.buildSite(construction[0],ACTIONS);
+                }                    
+            }
+        } else {
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestEnergy(source,ACTIONS);
+        }
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+        if (room.memory.totalMyConstructionSites > 0 && room.memory.totalMyConstructionSites <= 1) {
+            min = 2;
+        } else if (room.memory.totalMyConstructionSites > 1 && room.memory.totalMyConstructionSites <= 10) {
+            min = 4;
+        } else if (room.memory.totalMyConstructionSites > 5 && room.memory.totalMyConstructionSites <= 10) {
+            min = 4;
+        } else if (room.memory.totalMyConstructionSites > 10 && room.memory.totalMyConstructionSites <= 15) {
+            min = 6;
+        } else if (room.memory.totalMyConstructionSites > 15 && room.memory.totalMyConstructionSites <= 20) {
+            min = 6;
+        } else if (room.memory.totalMyConstructionSites > 20 && room.memory.totalMyConstructionSites <= 25) {
+            min = 8;
+        } else if (room.memory.totalMyConstructionSites > 25 && room.memory.totalMyConstructionSites <= 30) {
+            min = 8;
+        } else if (room.memory.totalMyConstructionSites > 35 && room.memory.totalMyConstructionSites <= 40) {
+            min = 10;
+        } else if (room.memory.totalMyConstructionSites > 45 && room.memory.totalMyConstructionSites <= 50) {
+            min = 10;
+        } else if (room.memory.totalMyConstructionSites > 55 && room.memory.totalMyConstructionSites <= 60) {
+            min = 12;
+        }
+
+        if (roleDistribution.total < min && 
+            room.memory.numberExtensions >= roleDistribution.minExtensions && 
+            roleDistribution.total <= roleDistribution.max) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'builder' + Game.time;
+            let memory = {role: 'builder'};
+            if(level <= 1) {                
+                let body = [WORK, CARRY, MOVE];                
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = builder;
+return module.exports;
+}
+/********** End of module 9: C:\Users\RBROW\screeps\src\creeps\builder.js **********/
+/********** Start module 10: C:\Users\RBROW\screeps\src\creeps\repairer.js **********/
+__modules[10] = function(module, exports) {
+var repairer = {
+
+    /** @param {Creep} creep **/
+    run: function(creep) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            CONSTRUCT: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        if (creep.memory.source == undefined) {
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
+        }
+
+        var containerDeposit;
+        _.forEach(creep.room.memory.sources, function(source) {
+            if (source.containersBuilt.length > 0) { 
+                containerDeposit = source.containersBuilt[0];
+            };
+        });
+        
+        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {            
+            if (creep.memory.lastBuild == undefined) {
+                var construction = creep.repairSite(null,ACTIONS);
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);
+                var confirmRepair = creep.confirmRepair(getNCons);                
+                if (confirmRepair && creep.store[RESOURCE_ENERGY] != 0) {                      
+                    var construction = creep.repairSite(getNCons,ACTIONS);
+                } else if (!confirmRepair) {
+                    var construction = creep.repairSite(null,ACTIONS);
+                    if(construction != 0) {
+                    }
+                } else if (creep.store[RESOURCE_ENERGY] == 0) {
+                    var source = creep.getObject(creep.memory.source);
+                    creep.harvestEnergy(source,ACTIONS);                                  
+                } else {
+                }
+            }   
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {            
+            if (creep.store.getFreeCapacity() > 0) {                
+                var source = creep.getObject(creep.memory.source);
+                creep.harvestEnergy(source,ACTIONS);                              
+            } else {                
+                var getNCons = creep.getObject(creep.memory.lastBuild);                
+                var confirmRepair = creep.confirmRepair(getNCons);    
+                if (confirmRepair) {                    
+                    var construction = creep.repairSite(getNCons,ACTIONS);                    
+                } else {                    
+                    var construction = creep.repairSite(null,ACTIONS);                    
+                }                    
+            }
+        } else {
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestEnergy(source,ACTIONS);
+        }
+    },
+    spawn: function(room, level, roleDistribution) {
+        var min = roleDistribution.min;
+        if (room.memory.repairSites > 0 && room.memory.repairSites <= 5) {
+            min = 1;
+        } else if (room.memory.repairSites > 5 && room.memory.repairSites <= 10) {
+            min = 2;
+        } else if (room.memory.repairSites > 10 && room.memory.repairSites <= 15) {
+            min = 3;
+        } else if (room.memory.repairSites > 15 && room.memory.repairSites <= 20) {
+            min = 4;
+        } else if (room.memory.repairSites > 20 && room.memory.repairSites <= 25) {
+            min = 5;
+        } else if (room.memory.repairSites > 25 && room.memory.repairSites <= 30) {
+            min = 10;
+        } else if (room.memory.repairSites > 35 && room.memory.repairSites <= 40) {
+            min = 10;
+        } else if (room.memory.repairSites > 45 && room.memory.repairSites <= 50) {
+            min = 10;
+        } else if (room.memory.repairSites > 55 && room.memory.repairSites <= 60) {
+            min = 15;
+        } else if (room.memory.repairSites > 60 && room.memory.repairSites <= 65) {
+            min = 15;
+        } else if (room.memory.repairSites > 65 && room.memory.repairSites <= 70) {
+            min = 15;
+        } else if (room.memory.repairSites > 70 && room.memory.repairSites <= 75) {
+            min = 20;
+        } else if (room.memory.repairSites > 75 && room.memory.repairSites <= 80) {
+            min = 20;
+        } else if (room.memory.repairSites > 80 && room.memory.repairSites <= 85) {
+            min = 20;
+        } else if (room.memory.repairSites > 85) {
+            min = 25;
+        }   
+
+        if (roleDistribution.total < min && 
+            room.memory.numberExtensions >= roleDistribution.minExtensions && 
+            roleDistribution.total <= roleDistribution.max && room.memory.repairSites > 0) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'repairer' + Game.time;
+            let memory = {role: 'repairer'};
+            if(level <= 1) {                
+                let body = [WORK, CARRY, MOVE];                
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = repairer;
+return module.exports;
+}
+/********** End of module 10: C:\Users\RBROW\screeps\src\creeps\repairer.js **********/
+/********** Start module 11: C:\Users\RBROW\screeps\src\creeps\repairerWall.js **********/
+__modules[11] = function(module, exports) {
+var repairerWall = {
+
+    /** @param {Creep} creep **/
+    run: function(creep) {
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            CONSTRUCT: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
+        }
+        if (creep.memory.source == undefined) {
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
+        }
+
+        var containerDeposit;
+        _.forEach(creep.room.memory.sources, function(source) {
+            if (source.containersBuilt.length > 0) { 
+                containerDeposit = source.containersBuilt[0];
+            };
+        });
+        
+        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {                        
+            if (creep.memory.lastBuild == undefined) {
+                var construction = creep.repairWall(null,ACTIONS);          
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);
+                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
+                    var construction = creep.repairWall(getNCons,ACTIONS);
+                } else if (!getNCons) {
+                    var construction = creep.repairWall(null,ACTIONS);
+                    if(buildResult != 0) {
+                    }
+                } else if (creep.store[RESOURCE_ENERGY] == 0) {
+                    var source = creep.getObject(creep.memory.source);
+                    creep.harvestSource(source,ACTIONS);                    
+                }
+            }   
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {            
+            if (creep.store.getFreeCapacity() > 0) {                
+                var openContainers = creep.getHarvestContainers();    
+                if (openContainers.length > 0) {
+                    creep.harvestContainer(openContainers[0],ACTIONS);                                    
+                }  else {
+                    var source = creep.getObject(creep.memory.source);
+                    creep.harvestSource(source,ACTIONS);
+                }                                                              
+            } else {
+                var getNCons = creep.getObject(creep.memory.lastBuild);       
+                var confirmRepair = creep.confirmRepair(getNCons);                         
+                console.log('repairWall',getNCons);  
+                if (confirmRepair) {
+                    var construction = creep.repairWall(getNCons,ACTIONS);                    
+                } else {                    
+                    var construction = creep.repairWall(null,ACTIONS);                    
+                }                    
+            }
+        } else {
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestSource(source,ACTIONS);                        
+        }
+    },
+    spawn: function(room, level, roleDistribution) {
+        var repairerWalls = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairerWall' && creep.room.name == room.name);
+        var min = roleDistribution.min;
+        if (room.memory.repairWalls > 0 && room.memory.repairWalls <= 5) {
+            min = 1;
+        } else if (room.memory.repairWalls > 5 && room.memory.repairWalls <= 10) {
+            min = 1;
+        } else if (room.memory.repairWalls > 10 && room.memory.repairWalls <= 15) {
+            min = 2;
+        } else if (room.memory.repairWalls > 15 && room.memory.repairWalls <= 20) {
+            min = 2;
+        } else if (room.memory.repairWalls > 20 && room.memory.repairWalls <= 25) {
+            min = 3;
+        } else if (room.memory.repairWalls > 25 && room.memory.repairWalls <= 30) {
+            min = 3;
+        } else if (room.memory.repairWalls > 35 && room.memory.repairWalls <= 40) {
+            min = 4;
+        } else if (room.memory.repairWalls > 45 && room.memory.repairWalls <= 50) {
+            min = 4;
+        } else if (room.memory.repairWalls > 55 && room.memory.repairWalls <= 60) {
+            min = 5;
+        } else if (room.memory.repairWalls > 60 && room.memory.repairWalls <= 65) {
+            min = 5;
+        } else if (room.memory.repairWalls > 65 && room.memory.repairWalls <= 70) {
+            min = 6;
+        } else if (room.memory.repairWalls > 70 && room.memory.repairWalls <= 75) {
+            min = 6;
+        } else if (room.memory.repairWalls > 75 && room.memory.repairWalls <= 80) {
+            min = 7;
+        } else if (room.memory.repairWalls > 80 && room.memory.repairWalls <= 85) {
+            min = 7;
+        } else if (room.memory.repairWalls > 85) {
+            min = 8;
+        }   
+
+        if (roleDistribution.total < min && 
+            room.memory.numberExtensions >= roleDistribution.minExtensions && 
+            roleDistribution.total <= roleDistribution.max && room.memory.repairWalls > 0) {
+            return true;
+        }
+    },
+    spawnData: function(room, level) {
+            let name = 'repairerWall' + Game.time;
+            let memory = {role: 'repairerWall'};
+            if(level <= 1) {                
+                let body = [WORK, CARRY, MOVE];                
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
+    }
+};
+
+module.exports = repairerWall;
+return module.exports;
+}
+/********** End of module 11: C:\Users\RBROW\screeps\src\creeps\repairerWall.js **********/
+/********** Start module 12: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+__modules[12] = function(module, exports) {
+let creepLogic = __require(1,12);
+let creepTypes = _.keys(creepLogic);
+
+function spawnCreeps(room,roleDistribution) {
+    _.forEach(creepTypes, type => console.log(type));
+
+    var creeps = room.find(FIND_MY_CREEPS);
+    var totalCreeps = 0;
+    var i = 0;
+	for(var n in creeps) {
+        totalCreeps++;
+	}
+    var populationLevelMultiplier = 8;
+    var creepLevel = totalCreeps / populationLevelMultiplier;
+    var controllerLevel = room.controller;
+
+    var structures = room.find(FIND_STRUCTURES);
+    var fullDeposits = 0;
+    var numberExtensions = 0;
+    var numberRepairSites = 0;
+    var numberRepairWalls = 0;
+    room.memory.numberExtensions = 0;
+    room.memory.numberDeposits = 0;
+    room.memory.numberFullDeposits = 0;
+
+    var roomControllerLevelExtensionLimit = {
+        1 : 0,
+        2 : 5
+    }
+    
+    for(var i = 0; i < structures.length; i++) {
+        var deposit = structures[i];        
+        if (deposit.structureType == STRUCTURE_EXTENSION || deposit.structureType == STRUCTURE_SPAWN) {
+            room.memory.numberDeposits++;
+            if(deposit.energy == deposit.energyCapacity) {
+                fullDeposits++;
+                room.memory.numberFullDeposits++;
+            }
+            if (deposit.structureType == STRUCTURE_EXTENSION) {
+                numberExtensions++
+                room.memory.numberExtensions++;
+            }            
+        }
+        if (deposit.hits < deposit.hitsMax && deposit.structureType != STRUCTURE_WALL) {
+            numberRepairSites++;
+        }
+        if (deposit.hits < deposit.hitsMax && deposit.structureType == STRUCTURE_WALL) {
+            numberRepairWalls++;
+        }
+    }
+    
+    room.memory.repairSites = numberRepairSites;
+    room.memory.repairWalls = numberRepairWalls;
+
+    var resourceLevel = fullDeposits / 5;
+    var level = Math.floor(creepLevel + resourceLevel); 	    
+    let creepTypeNeeded = _.find(creepTypes, function(type) {
+        return creepLogic[type].spawn(room,level,roleDistribution[type]);
+    });
+    let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level); 
+    console.log('SPAWN: Total Structures: ' + structures.length + ' , ' + 'Full Deposits (spawn/extension): ' + fullDeposits, 'NumberExtensions: ' , numberExtensions, 'RepairSites', numberRepairSites, 'RepairWalls',numberRepairWalls);
+    console.log('SPAWN','popMultiplier',populationLevelMultiplier,'creepLevel' , creepLevel,'resourceLevel' , resourceLevel, 'roomLevel' , level,'RoomControllerLevel' , room.controller.level,'controllerProgressPercentage', (room.controller.progress / room.controller.progressTotal) * 100 );
+    console.log('POP:','Total: ' + totalCreeps,'H:' + roleDistribution['harvester'].total + '|U:' + roleDistribution['upgrader'].total + '|B:' + roleDistribution['builder'].total + '|C:' + roleDistribution['carrier'].total + '|R:' + roleDistribution['repairer'].total + '|LDH:' + roleDistribution['harvesterLD'].total + '|RW:' + roleDistribution['repairerWall'].total);
+    if (creepSpawnData) {
+        let spawn = room.find(FIND_MY_SPAWNS)[0];
+        let result = spawn.spawnCreep(creepSpawnData.body, creepSpawnData.name, {memory: creepSpawnData.memory});
+    
+        console.log("Tried to Spawn:", creepTypeNeeded, result)
+    }
+}
+
+module.exports = spawnCreeps;
+return module.exports;
+}
+/********** End of module 12: C:\Users\RBROW\screeps\src\room\spawning.js **********/
+/********** Start module 13: C:\Users\RBROW\screeps\src\room\defense.js **********/
+__modules[13] = function(module, exports) {
+let creepLogic = __require(1,13);
+let creepTypes = _.keys(creepLogic);
+
+function defense(room) {
+
+    var towers = room.find(FIND_STRUCTURES, { filter: { structureType: STRUCTURE_TOWER }});
+    if (towers.length) {
+        _.forEach(towers, function(tower) {
+            console.log(tower);
+            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES,{ filter: (structure) => structure.hits < structure.hitsMax});
+            if (closestDamagedStructure) {
+                tower.repair(closestDamagedStructure);
+            }
+            var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+            if (closestHostile) {
+                tower.attack(closestHostile);
+            }
+        });
+    }
+}
+
+module.exports = defense;
+return module.exports;
+}
+/********** End of module 13: C:\Users\RBROW\screeps\src\room\defense.js **********/
+/********** Start module 14: C:\Users\RBROW\screeps\src\room\resources.js **********/
+__modules[14] = function(module, exports) {
+let creepLogic = __require(1,14);
+let creepTypes = _.keys(creepLogic);
+
+function resources(room) {
+    room.memory.sources = null;
+    var sources = room.find(
+        FIND_SOURCES, {
+            filter: function(src) {
+                var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                if(targets.length == 0) {
+                    return true;
+                }
+
+                return false;
+            }
+    });
+    Source.prototype.memory = undefined;
+    if(!room.memory.sources){//If this room has no sources memory yet
+        room.memory.sources = {}; //Add it
+        for(var i in sources){
+            var source = sources[i];
+            source.memory = room.memory.sources[source.id] = {}; //Create a new empty memory object for this source
+            source.memory.id = source.id;
+            source.memory.containersNear = {};
+        }
+    } else { //The memory already exists so lets add a shortcut to the sources in its memory
+        for(var i in sources){
+            var source = sources[i];
+            source.memory = this.memory.sources[source.id]; //Set the shortcut
+            source.memory.id = source.id;
+            source.memory.containersNear = {};
+        }
+    }
+    room.memory.sourceNeedsContainer = false;
+    var sourcesInRangeToContainer = new Array();              
+    _.forEach(room.memory.sources, function(source) {
+        source.containersNear = null;
+        source.hasContainerBuilt = false;
+        source.containersBuilt = null;
+        var newContainer = new Array();
+        source.containersBuilt = newContainer;
+        var newArray = new Array();
+        source.containersNear = newArray;
+        var theSource = Game.getObjectById(source.id);
+        var targets = theSource.pos.findInRange(FIND_STRUCTURES, 3);
+        _.forEach(targets, function(target) {
+            if (target.structureType == STRUCTURE_CONTAINER) {
+                sourcesInRangeToContainer.push(source.id);
+                source.hasContainer = true;
+                source.hasContainerBuilt = true;
+                if (!source.containersNear.includes(target.id + '__' + target.structureType)) {
+                    source.containersNear.push(target.id + '__' + target.structureType);
+                    var existing = source.containersNear;
+                    existing.push(target.id + '__' + target.structureType);
+                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
+                    source.containersNear = unique;   
+                }
+                if (!source.containersBuilt.includes(target.id)) {
+                    source.containersBuilt.push(target.id);
+                    var existing = source.containersBuilt;
+                    existing.push(target.id);
+                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
+                    source.containersBuilt = unique;                    
+                }
+            };
+        });
+        var targets = theSource.pos.findInRange(FIND_CONSTRUCTION_SITES, 3);
+        _.forEach(targets, function(target) {
+            if (target.structureType == STRUCTURE_CONTAINER) {
+                sourcesInRangeToContainer.push(source.id);
+                source.hasContainer = true;
+                if (!source.containersNear.includes(target.id + '__underConstruction')) {
+                    source.containersNear.push(target.id + '__underConstruction');
+                    var existing = source.containersNear;
+                    existing.push(target.id + '__underConstruction');
+                    var unique = existing.filter((v, i, a) => a.indexOf(v) === i);       
+                    source.containersNear = unique;
+                }       
+            }
+        });
+    });
+    
+    if (sources.length > sourcesInRangeToContainer.length) {
+        var sourcesNeedingContainer = new Array();
+        _.forEach(sources, function(source) {
+            if (!sourcesInRangeToContainer.includes(source.id)) {
+                sourcesNeedingContainer.push(source.id);
+            }                       
+        });
+        if (sourcesNeedingContainer.length > 0) {
+            room.memory.sourceNeedsContainer = true;
+            room.memory.sourcesNeedingContainer = sourcesNeedingContainer;
+        } else {
+            room.memory.sourceNeedsContainer = false;
+            room.memory.sourcesNeedingContainer = null;
+        }        
+    } else if (sources.length == sourcesInRangeToContainer.length) {
+    }
+}
+
+module.exports = resources;
+return module.exports;
+}
+/********** End of module 14: C:\Users\RBROW\screeps\src\room\resources.js **********/
+/********** Start module 15: C:\Users\RBROW\screeps\src\room\construction.js **********/
+__modules[15] = function(module, exports) {
+let creepLogic = __require(1,15);
+let creepTypes = _.keys(creepLogic);
+
+function construction(room) {    
+    room.memory.totalConstructionSites = 0;
+    room.memory.totalHostileConstructionSites = 0;    
+    room.memory.totalContainers = 0;    
+    room.memory.totalStructures = 0;   
+    room.memory.totalMyConstructionSites = 0;
+    room.memory.depositNeeded = 0;    
+    room.memory.totalDeposits = 0;
+    var constructionSites = _.filter(Game.constructionSites, (site) => site.room.name == room.name);;
+    _.forEach(constructionSites, function(site) {
+        room.memory.totalConstructionSites++;
+        if (site.my) {
+            room.memory.totalMyConstructionSites++;            
+        } else {
+            room.memory.totalHostileConstructionSites++;
+        };
+    });    
+    var myStructures = room.find(FIND_STRUCTURES);
+    _.forEach(myStructures, function(structure) {
+        room.memory.totalStructures++;
+        if (structure.structureType == STRUCTURE_CONTAINER) {
+            room.memory.totalContainers++;		
+        }
+        if (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) {
+            room.memory.totalDeposits++;
+            if (structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                room.memory.depositNeeded++;
+            }
+        }
+    });    
+}
+
+module.exports = construction;
+return module.exports;
+}
+/********** End of module 15: C:\Users\RBROW\screeps\src\room\construction.js **********/
+/********** Start module 16: C:\Users\RBROW\screeps\src\room\population.js **********/
+__modules[16] = function(module, exports) {
+let creepLogic = __require(1,16);
+let creepTypes = _.keys(creepLogic);
+
+function population(room) {    
+    room.memory.totalCreeps = 0;
+    room.memory.totalMyCreeps = 0;
+    room.memory.totalHostileCreeps = 0;    
+    var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);;
+    _.forEach(totalCreeps, function(creep) {
+        room.memory.totalCreeps++;
+        if (creep.my) {				
+            room.memory.totalMyCreeps++;
+        } else {
+            room.memory.totalHostileCreeps++;
+        }
+    });    
+}
+
+module.exports = population;
+return module.exports;
+}
+/********** End of module 16: C:\Users\RBROW\screeps\src\room\population.js **********/
+/********** Start module 17: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
+__modules[17] = function(module, exports) {
+const { result } = __require(4,17);
+
+Creep.prototype.sayHello = function sayHello() {
+    this.say("Hello", true);
+}
+
+Creep.prototype.sayDebug = function sayHello() {
+    this.say("Debug", true);
+}
+
+Creep.prototype.getObject = function(id) {
+	return Game.getObjectById(id);
+};
+
+Creep.prototype.getRoomSource = function(id) {
+    _.forEach(room.memory.sources, function(source) {
+        if (source.id == id) {
+            return source;
+        }
+    });
+};
+
+Creep.prototype.getOpenDeposits = function() {
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+                structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });
+	return deposits;
+};
+
+Creep.prototype.getDepositContainers = function() {
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_CONTAINER) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });	
+	return deposits;
+};
+
+Creep.prototype.getHarvestContainers = function() {
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_CONTAINER) && structure.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });	
+	return deposits;
+};
+
+Creep.prototype.constructSpawnExtensions = function buildSpawnExtensions(site) {    
+    if (site == undefined) {
+        site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
+    }
+    console.log('SITE BUILD: ', JSON.stringify(site)); 
+    if (!this.pos.inRangeTo(site.x,site.y,3)) {
+        this.moveTo(site.x,site.y);
+    }
+    var result = Game.spawns['Spawn1'].room.createConstructionSite(site.x,site.y, STRUCTURE_EXTENSION);
+    return result;
+}
+
+Creep.prototype.harvestEnergy = function harvestEnergy(source,ACTIONS) {    
+    var result;
+    var openContainers = this.getHarvestContainers();
+    
+    if (openContainers.length > 0) {
+        result = this.harvestContainer(openContainers[0],ACTIONS);                
+    } else {
+        result = this.harvestSource(source,ACTIONS);    
+    }    
+    return result;
+}
+
+Creep.prototype.harvestSource = function harvestSource(source,ACTIONS) {    
+    if (source == undefined) {
+        source = this.getObject(this.memory.source);
+    }    
+    var result = this.harvest(source);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(source);
+        this.memory.lastAction = ACTIONS.HARVEST;
+        this.memory.lastHarvest = source.id;
+        this.say('Harvesting');
+    }
+    return result;
+}
+
+Creep.prototype.harvestContainer = function harvestContainer(container,ACTIONS) {        
+    if (!this.pos.inRangeTo(container,1)) {        
+        this.moveTo(container);
+    }                      
+    var result = this.withdraw(container,RESOURCE_ENERGY);    
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(container.pos);
+        this.memory.lastAction = ACTIONS.HARVEST;
+    }
+    return result;
+}
+
+Creep.prototype.depositEnergy = function depositEnergy(source,ACTIONS) {    
+    var result;
+    var openContainers = this.getDepositContainers();                
+    if (openContainers > 0) {
+        result = this.depositContainer(openContainers[0],ACTIONS);                
+    } else {
+        result = this.deposit(source,ACTIONS);    
+    }    
+    return result;
+}
+
+Creep.prototype.depositContainer = function depositContainer(container,ACTIONS) {
+    if (container == null) {
+        container = this.getDepositContainers()[0];
+    }
+    var result = this.transfer(container, RESOURCE_ENERGY);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(container);
+        this.memory.lastAction = ACTIONS.DEPOSIT;
+    }                                                
+    return result;
+}
+
+Creep.prototype.deposit = function deposit(deposit,ACTIONS) {
+    if (deposit == null) {
+        deposit = this.getOpenDeposits()[0];
+    }    
+    var result = this.transfer(deposit, RESOURCE_ENERGY);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(deposit);
+        this.memory.lastAction = ACTIONS.DEPOSIT;
+    }                                                
+    return result;
+}
+
+Creep.prototype.buildSite = function buildSite(site,ACTIONS) {    
+    if (site == undefined) {
+        site = this.room.find(FIND_CONSTRUCTION_SITES);                
+    }    
+    var result = this.build(site);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(site);                     
+        this.memory.lastAction = ACTIONS.BUILD;
+        this.memory.lastBuild = site.id;
+    }
+    return result;
+}
+
+Creep.prototype.confirmRepair = function confirmRepair(site) {
+
+    if (site == null) {
+        return null;
+    }
+
+    if (site.hits < site.hitsMax) {
+        return true;
+    } else {
+        return false;
+    }    
+}
+
+Creep.prototype.repairSite = function repairSite(site,ACTIONS) {
+    if (site == null) {
+        var targets = this.room.find(FIND_STRUCTURES, {
+            filter: object => object.hits < object.hitsMax && object.structureType != STRUCTURE_WALL
+        });        
+        targets.sort((a,b) => a.hits - b.hits);        
+        if(targets.length > 0) {
+            site = targets[0];            
+        }
+    }
+    var result = this.repair(site);    
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(site);                     
+        this.memory.lastAction = ACTIONS.BUILD;
+        this.memory.lastBuild = site.id;
+    }
+    return result;
+}
+
+Creep.prototype.repairWall = function repairWall(site,ACTIONS) {
+
+    if (site == null) {
+        var targets = this.room.find(FIND_STRUCTURES, {
+            filter: object => object.hits < object.hitsMax && object.structureType == STRUCTURE_WALL
+        });        
+        targets.sort((a,b) => a.hits - b.hits);        
+        if(targets.length > 0) {
+            site = targets[0];            
+        }
+    }
+
+    var result = this.repair(site);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(site);                     
+        this.memory.lastAction = ACTIONS.BUILD;
+        this.memory.lastBuild = site.id;
+    }
+    return result;
+}
+
+Creep.prototype.getBuildSpot = function(creep,theBuildObjectCenter,surroundingSpace) {
+    var top =0;
+    var left = -surroundingSpace;
+    var bottom = +surroundingSpace; 
+    var right = 0;
+    var finalResults = new Array();
+    const lookLowerLeft = creep.room.lookForAtArea(LOOK_TERRAIN,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    const lookLowerLeftConstruction = creep.room.lookForAtArea(LOOK_CONSTRUCTION_SITES,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    const lookLowerLeftStructures = creep.room.lookForAtArea(LOOK_STRUCTURES,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForLowerLeftStructures = _.filter(lookLowerLeftStructures, (t) => t.structure.structureType == 'extension' || t.structure.structureType == 'spawn');
+    var filterForLowerLeft = _.filter(lookLowerLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+    var lowerLeftResults = new Array();
+    _.forEach(filterForLowerLeft, function(lowerLeft) {
+        var filterStructure = _.filter(filterForLowerLeftStructures, (t) => t.x == lowerLeft.x && t.y == lowerLeft.y);
+        if (filterStructure.length > 0) {            
+            
+        } else {
+            finalResults.push(lowerLeft);
+        }
+        
+    });            
+    top = -surroundingSpace;
+    left = -surroundingSpace;
+    bottom = 0; 
+    right = 0;
+    const lookUpperLeft = creep.room.lookForAtArea(LOOK_TERRAIN,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    const lookUpperLeftStructures = creep.room.lookForAtArea(LOOK_STRUCTURES,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForUpperLeftStructures = _.filter(lookUpperLeftStructures, (t) => t.structure.structureType == 'extension' || t.structure.structureType == 'spawn');
+    var filterForUpperLeft = _.filter(lookUpperLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+    _.forEach(filterForUpperLeft, function(upperLeft) {
+        var filterStructure = _.filter(filterForUpperLeftStructures, (t) => t.x == upperLeft.x && t.y == upperLeft.y);
+        if (filterStructure.length > 0) {            
+            
+        } else {
+            finalResults.push(upperLeft);
+        }
+        
+    });
+    top = -surroundingSpace;
+    left = 0;
+    bottom = 0; 
+    right = surroundingSpace;
+    const lookUpperRight = creep.room.lookForAtArea(LOOK_TERRAIN,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForUpperRight = _.filter(lookUpperRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+    const lookUpperRightStructures = creep.room.lookForAtArea(LOOK_STRUCTURES,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForUpperRightStructures = _.filter(lookUpperRightStructures, (t) => t.structure.structureType == 'extension' || t.structure.structureType == 'spawn');    
+    _.forEach(filterForUpperRight, function(upperRight) {
+        var filterStructure = _.filter(filterForUpperRightStructures, (t) => t.x == upperRight.x && t.y == upperRight.y);
+        if (filterStructure.length > 0) {            
+            
+        } else {
+            finalResults.push(upperRight);
+        }
+    });
+    top = 0;
+    left = 0;
+    bottom = +surroundingSpace;
+    right = surroundingSpace;
+
+    const lookLowerRight = creep.room.lookForAtArea(LOOK_TERRAIN,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForLowerRight = _.filter(lookLowerRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
+    const lookLowerRightStructures = creep.room.lookForAtArea(LOOK_STRUCTURES,theBuildObjectCenter.pos.y+top,theBuildObjectCenter.pos.x+left,theBuildObjectCenter.pos.y+bottom,theBuildObjectCenter.pos.x+right,true);
+    var filterForLowerRightStructures = _.filter(lookLowerRightStructures, (t) => t.structure.structureType == 'extension' || t.structure.structureType == 'spawn');    
+    _.forEach(filterForLowerRight, function(lowerRight) {
+        var filterStructure = _.filter(filterForLowerRightStructures, (t) => t.x == lowerRight.x && t.y == lowerRight.y);
+        if (filterStructure.length > 0) {            
+            
+        } else {
+            finalResults.push(lowerRight);
+        }
+    });        
+    var buildableSite;
+    if (finalResults.length > 0) {        
+        buildableSite = finalResults[0];
+    }
+	return buildableSite;
+};
+
+Creep.prototype.getSource = function() {
+	var srcs = this.room.find(
+        FIND_SOURCES, {
+            filter: function(src) {
+                var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                if(targets.length == 0) {
+                    return true;
+                }
+
+                return false;
+            }
+    });
+	var srcIndex = Math.floor(Math.random()*srcs.length);
+
+	return srcs[srcIndex];
+};
+
+
+return module.exports;
+}
+/********** End of module 17: C:\Users\RBROW\screeps\src\prototypes\creep.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);
