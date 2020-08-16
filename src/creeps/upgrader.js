@@ -32,12 +32,12 @@ var roleUpgrader = {
             var srcIndex = Math.floor(Math.random()*srcs.length);
             creep.memory.source = srcs[srcIndex].id;  
         }
-        var containerDeposit;
-        _.forEach(creep.room.memory.sources, function(source) {
-            if (source.containersBuilt.length > 0) { 
-                containerDeposit = source.containersBuilt[0];
-            };
-        });
+        // var containerDeposit;
+        // _.forEach(creep.room.memory.sources, function(source) {
+        //     if (source.containersBuilt.length > 0) { 
+        //         containerDeposit = source.containersBuilt[0];
+        //     };
+        // });
 
         if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
             //go to default source
@@ -55,8 +55,8 @@ var roleUpgrader = {
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
-        console.log('Upgraders: ' + roleDistribution.total, room.name);
+        //var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
+        //console.log('Upgraders: ' + roleDistribution.total, room.name);
         var min = roleDistribution.min;
         switch(room.controller.level) {
             case 0:
