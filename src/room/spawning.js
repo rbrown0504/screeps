@@ -1,7 +1,7 @@
 let creepLogic = require("../creeps/index");
 let creepTypes = _.keys(creepLogic);
 
-function spawnCreeps(room,roleDistribution) {
+function spawnCreeps(room,roleDistribution,globalRoleTotals) {
     // lists all the creep types to console
     _.forEach(creepTypes, type => console.log(type));
 
@@ -57,14 +57,22 @@ function spawnCreeps(room,roleDistribution) {
     var level = Math.floor(creepLevel + resourceLevel); 	    
     // find a creep type that returns true for the .spawn() function
     let creepTypeNeeded = _.find(creepTypes, function(type) {
-        return creepLogic[type].spawn(room,level,roleDistribution[type]);
+        return creepLogic[type].spawn(room,level,roleDistribution[type],globalRoleTotals[type]);
     });
 
     // get the data for spawning a new creep of creepTypeNeeded
     let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level); 
     console.log('SPAWN: Total Structures: ' + structures.length + ' , ' + 'Full Deposits (spawn/extension): ' + fullDeposits, 'NumberExtensions: ' , numberExtensions, 'RepairSites', numberRepairSites, 'RepairWalls',numberRepairWalls);
     console.log('SPAWN','popMultiplier',populationLevelMultiplier,'creepLevel' , creepLevel,'resourceLevel' , resourceLevel, 'roomLevel' , level,'RoomControllerLevel' , room.controller.level,'controllerProgressPercentage', (room.controller.progress / room.controller.progressTotal) * 100 );
-    console.log('POP:','Total: ' + totalCreeps,'H:' + roleDistribution['harvester'].total + '|U:' + roleDistribution['upgrader'].total + '|B:' + roleDistribution['builder'].total + '|C:' + roleDistribution['carrier'].total + '|R:' + roleDistribution['repairer'].total + '|LDH:' + roleDistribution['harvesterLD'].total + '|RW:' + roleDistribution['repairerWall'].total);
+    console.log(room.name,'Total: ' + totalCreeps,
+                'H:' + roleDistribution['harvester'].total +
+                '|U:' + roleDistribution['upgrader'].total +
+                '|B:' + roleDistribution['builder'].total + 
+                '|C:' + roleDistribution['carrier'].total +
+                '|R:' + roleDistribution['repairer'].total +
+                '|LDH:' + roleDistribution['harvesterLD'].total +
+                '|RW:' + roleDistribution['repairerWall'].total);
+
     if (creepSpawnData) {
         // find the first or 0th spawn in the room
         let spawn = room.find(FIND_MY_SPAWNS)[0];

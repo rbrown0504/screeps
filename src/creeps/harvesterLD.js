@@ -1,5 +1,3 @@
-const { map } = require("lodash");
-
 var harvesterLD = {
 
     /** @param {Creep} creep **/
@@ -55,33 +53,50 @@ var harvesterLD = {
         }            
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution) {
+    spawn: function(room, level, roleDistribution,globalRoleTotals) {
         //var harvesterLDs = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvesterLD' && creep.room.name == room.name);                
         var min = roleDistribution.min;
         switch(room.memory.numberExtensions) {
             case 0:
-                min = 0;
+                min = 2;
                 break;
             case 1:
-                min = 0;
+                min = 4;
                 break;
             case 2:
-                min = 1;
+                min = 6;
                 break;
             case 3:
-                min = 1;
+                min = 8;
                 break;
             case 4:
-                min = 0;
+                min = 10;
                 break;            
             case 5:
-                min = 0;
-                break;                        
-        }        
-        //console.log('harvesterLDs: ' + roleDistribution.total, room.name);        
-        if (roleDistribution.total < min
-            && room.memory.numberExtensions >= roleDistribution.minExtensions 
-            && roleDistribution.total <= roleDistribution.max) {
+                min = 12;
+                break;
+            case 6:
+                min = 14;
+                break;
+            case 7:
+                min = 16;
+                break;
+            case 8:
+                min = 18;
+                break;
+            case 9:
+                min = 20;
+                break;
+            case 10:
+                min = 22;
+                break;            
+            case 11:
+                min = 22;
+                break;                           
+        }
+        
+        if (globalRoleTotals.total < min
+            && globalRoleTotals.total <= roleDistribution.max) {
             return true;
         }
     },
