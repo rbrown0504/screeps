@@ -22,8 +22,8 @@ module.exports.loop = function () {
 			total: 0,
 			goalPercentage: 0.3,
 			currentPercentage: 0,
-			max: 2,
-			min: 0,
+			max: 10,
+			min: 2,
 			minExtensions: 0,
 			minTTL: 0,			
         },
@@ -31,8 +31,17 @@ module.exports.loop = function () {
 			total: 0,
 			goalPercentage: 0.3,
 			currentPercentage: 0,
-			max: 6,
-			min: 4,
+			max: 10,
+			min: 6,
+			minExtensions: 0,
+			minTTL: 0,
+		},
+		harvesterLD: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 3,
+			min: 1,
 			minExtensions: 0,
 			minTTL: 0,
 		},
@@ -54,15 +63,15 @@ module.exports.loop = function () {
 			minExtensions: 0,
 			minTTL: 0,
         },
-        builder1: {
-			total: 0,
-			goalPercentage: 0.25,
-			currentPercentage: 0,
-			max: 15,
-			min: 0,
-			minExtensions: 0,
-			minTTL: 0,
-		},
+        // builder1: {
+		// 	total: 0,
+		// 	goalPercentage: 0.25,
+		// 	currentPercentage: 0,
+		// 	max: 15,
+		// 	min: 0,
+		// 	minExtensions: 0,
+		// 	minTTL: 0,
+		// },
 		repairer: {
 			total: 0,
 			goalPercentage: 0.25,
@@ -76,11 +85,12 @@ module.exports.loop = function () {
 			total: 0,
 			goalPercentage: 0.25,
 			currentPercentage: 0,
-			max: 0,
+			max: 5,
 			min: 0,
 			minExtensions: 0,
 			minTTL: 0,
 		},
+		
 		// CreepHealer: {
 		// 	total: 0,
 		// 	goalPercentage: 0.25,
@@ -111,7 +121,7 @@ module.exports.loop = function () {
 	for(var n in Game.myRooms) {
 		var room = Game.myRooms[n];
 		var minTTL = 0;
-		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);		
+		var totalCreeps = _.filter(Game.creeps, (creep) => creep.room.name == room.name);	
     	_.forEach(totalCreeps, function(creep) {
 			let role = creep.memory.role;
 			roleDistribution[role].total++;	
