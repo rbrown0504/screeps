@@ -7,7 +7,31 @@ const { min } = require('lodash');
 module.exports.loop = function () {
     // make a list of all of our rooms
 	Game.myRooms = _.filter(Game.rooms, r => r.controller && r.controller.level > 0 && r.controller.my);
-	//get some room metrics together	
+	//get some global metrics together
+	var globalRoleTotals = {
+		carrier: {
+			total: 0
+		},
+		harvester: {
+			total: 0
+		},
+		harvesterLD: {
+			total: 0
+		},
+		upgrader: {
+			total: 0
+		},
+		builder: {
+			total: 0
+		},
+		repairer: {
+			total: 0
+		},
+		repairerWall: {
+			total: 0
+		},		
+	}
+	//get some room metrics together
 	var roleDistribution = {
 		// CreepMiner: {
 		// 	total: 0,
@@ -40,7 +64,7 @@ module.exports.loop = function () {
 			total: 0,
 			goalPercentage: 0.25,
 			currentPercentage: 0,
-			max: 3,
+			max: 30,
 			min: 1,
 			minExtensions: 0,
 			minTTL: 0,
@@ -132,6 +156,13 @@ module.exports.loop = function () {
 			}			
 		});
 	}	
+	for(var name in Game.creeps) {
+        var creep = Game.creeps[name];
+		let role = creep.memory.role;
+		if (creep.my) {
+			globalRoleTotals[role].total++;
+		}		
+	}
 	//run through resource management
 	_.forEach(Game.myRooms, r => roomLogic.resources(r));
 	//run through construction management
@@ -139,7 +170,15 @@ module.exports.loop = function () {
 	//run through population management
 	_.forEach(Game.myRooms, r => roomLogic.population(r));	    
 	// run spawn logic for each room in our empire
-	_.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution));
+	_.forEach(Game.myRooms, r => roomLogic.spawning(r,roleDistribution,globalRoleTotals));
+	console.log('GLOBAL POP:','Total (room controlled)',totalCreeps.length,
+                'H:' + globalRoleTotals['harvester'].total +
+                '|U:' + globalRoleTotals['upgrader'].total +
+                '|B:' + globalRoleTotals['builder'].total + 
+                '|C:' + globalRoleTotals['carrier'].total +
+                '|R:' + globalRoleTotals['repairer'].total +
+                '|LDH:' + globalRoleTotals['harvesterLD'].total +
+                '|RW:' + globalRoleTotals['repairerWall'].total);
     // run defense logic for each room in our empire
 	_.forEach(Game.myRooms, r => roomLogic.defense(r));    
 
