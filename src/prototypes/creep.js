@@ -31,11 +31,21 @@ Creep.prototype.getOpenDeposits = function() {
 	return deposits;
 };
 
-Creep.prototype.getOpenContainer = function() {
-    // Some kind of unit counter per resource (with Population)
+Creep.prototype.getDepositContainers = function() {
+    //get containers having free capacity available for deposit
     var deposits = this.room.find(FIND_STRUCTURES, {
         filter: (structure) => {
             return (structure.structureType == STRUCTURE_CONTAINER) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });	
+	return deposits;
+};
+
+Creep.prototype.getHarvestContainers = function() {
+    //get containers having free energy to withdraw from
+    var deposits = this.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_CONTAINER) && structure.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
         }
     });	
 	return deposits;
@@ -57,9 +67,21 @@ Creep.prototype.constructSpawnExtensions = function buildSpawnExtensions(site) {
     return result;
 }
 
+Creep.prototype.harvestEnergy = function harvestEnergy(source,ACTIONS) {    
+    var result;
+    var openContainers = this.getHarvestContainers();
+    
+    if (openContainers.length > 0) {
+        result = this.harvestContainer(openContainers[0],ACTIONS);                
+    } else {
+        result = this.harvestSource(source,ACTIONS);    
+    }    
+    return result;
+}
+
 Creep.prototype.harvestSource = function harvestSource(source,ACTIONS) {    
     if (source == undefined) {
-        source = this.getObject(creep.memory.source);
+        source = this.getObject(this.memory.source);
     }    
     var result = this.harvest(source);
     if(result == ERR_NOT_IN_RANGE) {
@@ -82,13 +104,39 @@ Creep.prototype.harvestContainer = function harvestContainer(container,ACTIONS) 
     return result;
 }
 
+Creep.prototype.depositEnergy = function depositEnergy(source,ACTIONS) {    
+    var result;
+    var openContainers = this.getDepositContainers();                
+    if (openContainers > 0) {
+        result = this.depositContainer(openContainers[0],ACTIONS);                
+    } else {
+        result = this.deposit(source,ACTIONS);    
+    }    
+    return result;
+}
+
+
 Creep.prototype.depositContainer = function depositContainer(container,ACTIONS) {
+    if (container == null) {
+        container = this.getDepositContainers()[0];
+    }
     var result = this.transfer(container, RESOURCE_ENERGY);
     if(result == ERR_NOT_IN_RANGE) {
         this.moveTo(container);
         this.memory.lastAction = ACTIONS.DEPOSIT;
-    }                                        
-        
+    }                                                
+    return result;
+}
+
+Creep.prototype.deposit = function deposit(deposit,ACTIONS) {
+    if (deposit == null) {
+        deposit = this.getOpenDeposits()[0];
+    }    
+    var result = this.transfer(deposit, RESOURCE_ENERGY);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(deposit);
+        this.memory.lastAction = ACTIONS.DEPOSIT;
+    }                                                
     return result;
 }
 
@@ -97,6 +145,59 @@ Creep.prototype.buildSite = function buildSite(site,ACTIONS) {
         site = this.room.find(FIND_CONSTRUCTION_SITES);                
     }    
     var result = this.build(site);
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(site);                     
+        this.memory.lastAction = ACTIONS.BUILD;
+        this.memory.lastBuild = site.id;
+    }
+    return result;
+}
+
+Creep.prototype.confirmRepair = function confirmRepair(site) {
+
+    if (site == null) {
+        return null;
+    }
+
+    if (site.hits < site.hitsMax) {
+        return true;
+    } else {
+        return false;
+    }    
+}
+
+Creep.prototype.repairSite = function repairSite(site,ACTIONS) {
+    if (site == null) {
+        var targets = this.room.find(FIND_STRUCTURES, {
+            filter: object => object.hits < object.hitsMax && object.structureType != STRUCTURE_WALL
+        });        
+        targets.sort((a,b) => a.hits - b.hits);        
+        if(targets.length > 0) {
+            site = targets[0];            
+        }
+    }
+    var result = this.repair(site);    
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(site);                     
+        this.memory.lastAction = ACTIONS.BUILD;
+        this.memory.lastBuild = site.id;
+    }
+    return result;
+}
+
+Creep.prototype.repairWall = function repairWall(site,ACTIONS) {
+
+    if (site == null) {
+        var targets = this.room.find(FIND_STRUCTURES, {
+            filter: object => object.hits < object.hitsMax && object.structureType != STRUCTURE_WALL
+        });        
+        targets.sort((a,b) => a.hits - b.hits);        
+        if(targets.length > 0) {
+            site = targets[0];            
+        }
+    }
+
+    var result = this.repair(site);
     if(result == ERR_NOT_IN_RANGE) {
         this.moveTo(site);                     
         this.memory.lastAction = ACTIONS.BUILD;
@@ -121,7 +222,7 @@ Creep.prototype.getBuildSpot = function(creep,theBuildObjectCenter,surroundingSp
     var lowerLeftResults = new Array();
     _.forEach(filterForLowerLeft, function(lowerLeft) {
         var filterStructure = _.filter(filterForLowerLeftStructures, (t) => t.x == lowerLeft.x && t.y == lowerLeft.y);
-        console.log('filterStructureLowerLeft',JSON.stringify(filterStructure),filterStructure.length,filterStructure.length > 0);
+        //console.log('filterStructureLowerLeft',JSON.stringify(filterStructure),filterStructure.length,filterStructure.length > 0);
         if (filterStructure.length > 0) {            
             
         } else {

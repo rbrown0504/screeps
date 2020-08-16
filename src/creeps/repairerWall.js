@@ -1,4 +1,4 @@
-var builder = {
+var repairerWall = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
@@ -34,97 +34,73 @@ var builder = {
             };
         });
         
-        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {
-            //console.log('**00000000000000000000000000000000000000000000000000000000000000000000000000000000000');                  
-            if (creep.memory.lastBuild == undefined) {                     
-                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                creep.buildSite(construction[0],ACTIONS);                
+        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {            
+            if (creep.memory.lastBuild == undefined) {
+
+                var construction = creep.repairSite(null,ACTIONS);
+                console.log('repairerWall:','Result',JSON.stringify(construction));
+                //creep.buildSite(construction[0],ACTIONS);                
             } else {
                 //continue to work a consutruction site as long as it returns an object
                 //when it no longer returns an object, find a new construction site
                 //console.log('***********************------------------------------****************************');
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    creep.buildSite(getNCons,ACTIONS);                    
-                } else if (!getNCons) {                    
-                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    //console.log('buildResult ', creep.build(construction[0]),'construction',construction);                    
-                    var buildResult = creep.buildSite(construction[0],ACTIONS);
+                    //creep.buildSite(getNCons,ACTIONS); 
+                    var construction = creep.repairSite(getNCons,ACTIONS);
+                    console.log('repairerWall:','Result',JSON.stringify(construction));                   
+                } else if (!getNCons) {
+                    var construction = creep.repairSite(null,ACTIONS);
                     if(buildResult != 0) {
-                        //console.log('_______________________________construct SPAWN EXTENSIONS__________________________');                                                
-                        var site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
-                        if (site != null) {
-                            if (creep.constructSpawnExtensions(site) != 0) {
-                                //console.log('something is up. cannot construct a spawn extension');
-                            };
-                        }                        
+                        console.log('______________________________something is up cannot repair sites__________________________');                                                                                            
                     }
                 } else if (creep.store[RESOURCE_ENERGY] == 0) {
-                    //go to default source
-                    //console.log('444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444');
+                    //go to default source                    
                     var source = creep.getObject(creep.memory.source);
-                    creep.harvestEnergy(source,ACTIONS);
+                    creep.harvestSource(source,ACTIONS);                    
                 } else {
-                    //console.log('______________________________________________________________________________');
+                    console.log('______________________________________________________________________________');
                 }
             }   
         } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
-            //console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');                  
-            if (creep.store.getFreeCapacity() > 0) {
-                var source = creep.getObject(creep.memory.source);
+            if (creep.store.getFreeCapacity() > 0) {                
                 //first try to find a container with available energy. If not, go and harvest a source
-                creep.harvestEnergy(source,ACTIONS);                                
+                if (containerDeposit != undefined) {
+                    var openContainers = creep.getHarvestContainers();                                
+                    creep.harvestContainer(openContainers[0],ACTIONS);                                    
+                } else {
+                    //harvest source
+                    var source = creep.getObject(creep.memory.source);
+                    creep.harvestSource(source,ACTIONS);                       
+                }
             } else {
                 //GO DO BUILD STUFF
                 var getNCons = creep.getObject(creep.memory.lastBuild);                
-                //console.log('***3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333');                  
                 if (getNCons) {
-                    creep.buildSite(getNCons,ACTIONS);                
-                } else {
-                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);
-                    creep.buildSite(construction[0],ACTIONS);
+                    var construction = creep.repairSite(getNCons,ACTIONS);                    
+                } else {                    
+                    var construction = creep.repairSite(null,ACTIONS);                    
                 }                    
             }
         } else {
             var source = creep.getObject(creep.memory.source);
-            creep.harvestEnergy(source,ACTIONS);
+            creep.harvestSource(source,ACTIONS);                        
         }
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.room.name == room.name);
-        console.log('builders: ' + roleDistribution.total, room.name);
-        var min = roleDistribution.min;
-        if (room.memory.totalMyConstructionSites > 0 && room.memory.totalMyConstructionSites <= 5) {
-            min = 1;
-        } else if (room.memory.totalMyConstructionSites > 5 && room.memory.totalMyConstructionSites <= 10) {
-            min = 2;
-        } else if (room.memory.totalMyConstructionSites > 10 && room.memory.totalMyConstructionSites <= 15) {
-            min = 3;
-        } else if (room.memory.totalMyConstructionSites > 15 && room.memory.totalMyConstructionSites <= 20) {
-            min = 4;
-        } else if (room.memory.totalMyConstructionSites > 20 && room.memory.totalMyConstructionSites <= 25) {
-            min = 5;
-        } else if (room.memory.totalMyConstructionSites > 25 && room.memory.totalMyConstructionSites <= 30) {
-            min = 6;
-        } else if (room.memory.totalMyConstructionSites > 35 && room.memory.totalMyConstructionSites <= 40) {
-            min = 7;
-        } else if (room.memory.totalMyConstructionSites > 45 && room.memory.totalMyConstructionSites <= 50) {
-            min = 8;
-        } else if (room.memory.totalMyConstructionSites > 55 && room.memory.totalMyConstructionSites <= 60) {
-            min = 9;
-        }
-
-        if (roleDistribution.total < min && 
+        var repairerWalls = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairerWall' && creep.room.name == room.name);
+        console.log('repairerWalls: ' + roleDistribution.total, room.name);
+        if (roleDistribution.total < roleDistribution.min && 
             room.memory.numberExtensions >= roleDistribution.minExtensions && 
-            roleDistribution.total <= roleDistribution.max) {
+            roleDistribution.total <= roleDistribution.max && room.memory.repairWalls > 0) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
     spawnData: function(room, level) {
-            let name = 'builder' + Game.time;
-            let memory = {role: 'builder'};
+            let name = 'repairerWall' + Game.time;
+            let memory = {role: 'repairerWall'};
             if(level <= 1) {                
                 let body = [WORK, CARRY, MOVE];                
                 return {name, body, memory};
@@ -168,4 +144,4 @@ var builder = {
     }
 };
 
-module.exports = builder;
+module.exports = repairerWall;

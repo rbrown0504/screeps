@@ -56,11 +56,11 @@ var harvester = {
         if(deposits == 0 && spawns[0].energy == spawns[0].energyCapacity) {
             //help a builder out
             depositFor = DEPOSIT_FOR.CONSTRUCTION;
-            console.log('it would do this.. deposit for construction');
+            //console.log('it would do this.. deposit for construction');
         } else {
             //go to containers or spawn
             depositFor = DEPOSIT_FOR.POPULATION;
-            console.log('it would do this.. deposit for population');
+            //console.log('it would do this.. deposit for population');
         }                
         var harvesterBuildContainer = false;
         var sourceContainer = false;
@@ -88,7 +88,7 @@ var harvester = {
         //start doing stuff
         if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
             //go to default source
-            console.log('**********************1111111111111111111111111111111111111');
+            //console.log('**********************1111111111111111111111111111111111111');
             var source = creep.getObject(creep.memory.source);
             creep.harvestSource(source,ACTIONS);
         } else if (creep.store[RESOURCE_ENERGY] == 0) {
@@ -101,8 +101,16 @@ var harvester = {
                 var source = creep.getObject(creep.memory.source);
                 creep.harvestSource(source,ACTIONS);                
             } else if (creep.room.memory.sourceNeedsContainer == true) {
+
+                //console.log('_______________________________construct SPAWN EXTENSIONS__________________________');                                                
+                var site = creep.getBuildSpot(creep,Game.spawns['Spawn1'],1);
+                if (site != null) {
+                    if (creep.constructSpawnExtensions(site) != 0) {
+                        //console.log('something is up. cannot construct a spawn extension');
+                    };
+                }
                 //if there isn't a single container withing 3 of source, construct one                
-                console.log('Construct a Container');
+                // console.log('Construct a Container');
                 var sourceId = creep.room.memory.sourcesNeedingContainer[0];                
                 //console.log('Builde this container: ',sourceId);
                 var constructionSource = creep.getObject(sourceId);
@@ -132,7 +140,7 @@ var harvester = {
                 var right = 0;
                 const lookLowerLeft = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);                    
                 var filterForLowerLeft = _.filter(lookLowerLeft, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
-                console.log('filterForfilterFor ' + filterForLowerLeft, filterForLowerLeft.length);
+                //console.log('filterForfilterFor ' + filterForLowerLeft, filterForLowerLeft.length);
                 
                 //look upper left
                 top = -3;
@@ -156,10 +164,10 @@ var harvester = {
                 const lookLowerRight = creep.room.lookForAtArea(LOOK_TERRAIN,constructionSource.pos.y+top,constructionSource.pos.x+left,constructionSource.pos.y+bottom,constructionSource.pos.x+right,true);
                 var filterForLowerRight = _.filter(lookLowerRight, (t) => t.terrain == 'plain' || t.terrain == 'swamp');
                 
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerLeft.length + ' buildable areas in the lower left quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperLeft.length + ' buildable areas in the upper left quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperRight.length + ' buildable areas in the upper right quadrant 3 range.');
-                console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerRight.length + ' buildable areas in the lower right quadrant 3 range.');                
+                // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerLeft.length + ' buildable areas in the lower left quadrant 3 range.');
+                // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperLeft.length + ' buildable areas in the upper left quadrant 3 range.');
+                // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperRight.length + ' buildable areas in the upper right quadrant 3 range.');
+                // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerRight.length + ' buildable areas in the lower right quadrant 3 range.');                
                 if (filterForLowerLeft.length > 0 ) {
                     console.log('create a construction site');
                     creep.moveTo(filterForLowerLeft[0].pos);
@@ -184,40 +192,68 @@ var harvester = {
                 //check if there are containers near a resource that are still a construction site and need to be built
                 var target = Game.getObjectById(harvesterContainersToBuild[0]);
                 creep.buildSite(target,ACTIONS);
-            } else if (creep.store[RESOURCE_ENERGY] != 0 && sourceContainer && depositFor != DEPOSIT_FOR.POPULATION) {
-                //console.log('4444444444444444444444444444444444444444444');                
-                var targetContainer = creep.getOpenContainer();
-                if (targetContainer != undefined) {
-                    var result = creep.depositContainer(targetContainer[0],ACTIONS);                          
-                }
             } else if (depositFor == DEPOSIT_FOR.CONSTRUCTION) {
                 //console.log('555555555555555555555555555555555555555555');                     
                 //help a builder out
                 var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
                 creep.buildSite(construction[0],ACTIONS);                
             } else {     
-                console.log('6666666666666666_____opportunity here still__________________66666666666666666666666666666');
-                //or go to spawn            
-                if (deposits.length > 0) {                    
-                    console.log('xxxxxxxx',JSON.stringify(deposits[0]));
-                    if (creep.transfer(deposits[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(deposits[0]);
-                    }
-                } else {
-                    console.log('zzzzzzzzzzzz');
-                    if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(Game.spawns['Spawn1']);
-                    }
-                }                
+                console.log('6666666666666666_______JUST REWORKED THIS________________66666666666666666666666666666');
+                //creep.depositContainer(null,ACTIONS);
+                console.log('depositContainerResult:',creep.depositContainer(null,ACTIONS));
+                //creep.deposit(deposits,ACTIONS);
+                // if (deposits.length > 0) {                    
+                //     //console.log('xxxxxxxx',JSON.stringify(deposits[0]));
+                //     if (creep.transfer(deposits[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                //         creep.moveTo(deposits[0]);
+                //     }
+                // } else {
+                //     //console.log('zzzzzzzzzzzz');
+                //     if(creep.transfer(Game.spawns['Spawn1'], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                //         creep.moveTo(Game.spawns['Spawn1']);
+                //     }
+                // }                
             }
         }        
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution,numberExtensions) {
+    spawn: function(room, level, roleDistribution) {
         var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
+        //number of deposits
+        //var depositContainers =  this.getDepositContainers();
+        //console.log('spawnHarvesters: ', 'depositNeeded: ', room.memory.depositNeeded);
+        var min = roleDistribution.min;
+        switch(room.memory.numberExtensions) {
+            case 0:
+                min = 2;
+                break;
+            case 1:
+                min = 3;
+                break;
+            case 2:
+                min = 3;
+                break;
+            case 3:
+                min = 4;
+                break;
+            case 4:
+                min = 4;
+                break;            
+            case 5:
+                min = 4;
+                break;                        
+        }
+        if (room.memory.numberExtensions ) {
+
+
+        }
+
+
+
+
         console.log('Harvesters: ' + roleDistribution.total, room.name);        
-        if (roleDistribution.total < roleDistribution.min 
-            && numberExtensions >= roleDistribution.minExtensions 
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions 
             && roleDistribution.total <= roleDistribution.max) {
             return true;
         }

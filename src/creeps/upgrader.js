@@ -32,7 +32,6 @@ var roleUpgrader = {
             var srcIndex = Math.floor(Math.random()*srcs.length);
             creep.memory.source = srcs[srcIndex].id;  
         }
-
         var containerDeposit;
         _.forEach(creep.room.memory.sources, function(source) {
             if (source.containersBuilt.length > 0) { 
@@ -43,20 +42,10 @@ var roleUpgrader = {
         if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
             //go to default source
             var source = creep.getObject(creep.memory.source);
-            if (containerDeposit != undefined) {
-                var targetContainer = Game.getObjectById(containerDeposit);
-                creep.harvestContainer(targetContainer,ACTIONS);                
-            } else {
-                creep.harvestSource(source,ACTIONS);
-            }
+            creep.harvestEnergy(source,ACTIONS);
         } else if (creep.store[RESOURCE_ENERGY] == 0) {
             creep.say('Empty');
-            if (containerDeposit != undefined) {
-                var targetContainer = Game.getObjectById(containerDeposit);
-                creep.harvestContainer(targetContainer,ACTIONS);
-            } else {
-                creep.harvestSource(source,ACTIONS);                                    
-            }
+            creep.harvestEnergy(source,ACTIONS);            
         } else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller);
@@ -65,11 +54,32 @@ var roleUpgrader = {
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution, numberExtensions) {
+    spawn: function(room, level, roleDistribution) {
         var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
         console.log('Upgraders: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min 
-            && numberExtensions >= roleDistribution.minExtensions
+        var min = roleDistribution.min;
+        switch(room.controller.level) {
+            case 0:
+                min = 2;
+                break;
+            case 1:
+                min = 4;
+                break;
+            case 2:
+                min = 6;
+                break;
+            case 3:
+                min = 8;
+                break;
+            case 4:
+                min = 10;
+                break;            
+            case 5:
+                min = 12;
+                break;                        
+        }
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions
             && roleDistribution.total <= roleDistribution.max) {
             return true;
         }

@@ -6,7 +6,9 @@ function construction(room) {
     room.memory.totalHostileConstructionSites = 0;    
     room.memory.totalContainers = 0;    
     room.memory.totalStructures = 0;   
-    room.memory.totalMyConstructionSites = 0;    
+    room.memory.totalMyConstructionSites = 0;
+    room.memory.depositNeeded = 0;    
+    room.memory.totalDeposits = 0;
     //go through construction sites	
     var constructionSites = _.filter(Game.constructionSites, (site) => site.room.name == room.name);;
     _.forEach(constructionSites, function(site) {
@@ -23,7 +25,13 @@ function construction(room) {
         room.memory.totalStructures++;
         if (structure.structureType == STRUCTURE_CONTAINER) {
             room.memory.totalContainers++;		
-        } 
+        }
+        if (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) {
+            room.memory.totalDeposits++;
+            if (structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                room.memory.depositNeeded++;
+            }
+        }
     });    
 }
 
