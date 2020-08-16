@@ -49,25 +49,26 @@ var repairer = {
                 } else if (!confirmRepair) {
                     var construction = creep.repairSite(null,ACTIONS);
                     if(construction != 0) {
-                        console.log('______________________________something is up cannot repair sites__________________________');                                                                                            
+                        //console.log('______________________________something is up cannot repair sites__________________________');                                                                                            
                     }
                 } else if (creep.store[RESOURCE_ENERGY] == 0) {
                     //go to default source                    
                     var source = creep.getObject(creep.memory.source);
                     creep.harvestEnergy(source,ACTIONS);                                  
                 } else {
-                    console.log('______________________________________________________________________________');
+                    //console.log('______________________________something is up cannot repair sites__________________________');                                                                                            
                 }
             }   
-        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {            
             if (creep.store.getFreeCapacity() > 0) {                
                 //first try to find a container with available energy. If not, go and harvest a source
                 var source = creep.getObject(creep.memory.source);
-                creep.harvestEnergy(source,ACTIONS);                
-            } else {
+                creep.harvestEnergy(source,ACTIONS);                              
+            } else {                
                 //GO DO BUILD STUFF
                 var getNCons = creep.getObject(creep.memory.lastBuild);                
-                if (getNCons) {
+                var confirmRepair = creep.confirmRepair(getNCons);    
+                if (confirmRepair) {                    
                     var construction = creep.repairSite(getNCons,ACTIONS);                    
                 } else {                    
                     var construction = creep.repairSite(null,ACTIONS);                    
@@ -76,12 +77,13 @@ var repairer = {
         } else {
             var source = creep.getObject(creep.memory.source);
             creep.harvestEnergy(source,ACTIONS);
+            //creep.moveTo(Game.spawns['Spawn1']);
         }
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer' && creep.room.name == room.name);
-        console.log('repairers: ' + roleDistribution.total, room.name);
+        //var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer' && creep.room.name == room.name);
+        //console.log('repairers: ' + roleDistribution.total, room.name);
         var min = roleDistribution.min;
         if (room.memory.repairSites > 0 && room.memory.repairSites <= 5) {
             min = 1;
@@ -94,14 +96,26 @@ var repairer = {
         } else if (room.memory.repairSites > 20 && room.memory.repairSites <= 25) {
             min = 5;
         } else if (room.memory.repairSites > 25 && room.memory.repairSites <= 30) {
-            min = 6;
+            min = 10;
         } else if (room.memory.repairSites > 35 && room.memory.repairSites <= 40) {
-            min = 7;
+            min = 10;
         } else if (room.memory.repairSites > 45 && room.memory.repairSites <= 50) {
-            min = 8;
+            min = 10;
         } else if (room.memory.repairSites > 55 && room.memory.repairSites <= 60) {
-            min = 9;
-        }
+            min = 15;
+        } else if (room.memory.repairSites > 60 && room.memory.repairSites <= 65) {
+            min = 15;
+        } else if (room.memory.repairSites > 65 && room.memory.repairSites <= 70) {
+            min = 15;
+        } else if (room.memory.repairSites > 70 && room.memory.repairSites <= 75) {
+            min = 20;
+        } else if (room.memory.repairSites > 75 && room.memory.repairSites <= 80) {
+            min = 20;
+        } else if (room.memory.repairSites > 80 && room.memory.repairSites <= 85) {
+            min = 20;
+        } else if (room.memory.repairSites > 85) {
+            min = 25;
+        }   
 
         if (roleDistribution.total < min && 
             room.memory.numberExtensions >= roleDistribution.minExtensions && 
