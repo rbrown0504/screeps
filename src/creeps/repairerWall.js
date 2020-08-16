@@ -34,52 +34,45 @@ var repairerWall = {
             };
         });
         
-        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {            
+        if(creep.store[RESOURCE_ENERGY] != 0 && creep.memory.lastAction == ACTIONS.BUILD) {                        
             if (creep.memory.lastBuild == undefined) {
-
-                var construction = creep.repairSite(null,ACTIONS);
-                console.log('repairerWall:','Result',JSON.stringify(construction));
-                //creep.buildSite(construction[0],ACTIONS);                
+                var construction = creep.repairWall(null,ACTIONS);          
             } else {
                 //continue to work a consutruction site as long as it returns an object
                 //when it no longer returns an object, find a new construction site
-                //console.log('***********************------------------------------****************************');
                 var getNCons = creep.getObject(creep.memory.lastBuild);
                 if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    //creep.buildSite(getNCons,ACTIONS); 
-                    var construction = creep.repairSite(getNCons,ACTIONS);
-                    console.log('repairerWall:','Result',JSON.stringify(construction));                   
+                    var construction = creep.repairWall(getNCons,ACTIONS);
                 } else if (!getNCons) {
-                    var construction = creep.repairSite(null,ACTIONS);
+                    var construction = creep.repairWall(null,ACTIONS);
                     if(buildResult != 0) {
-                        console.log('______________________________something is up cannot repair sites__________________________');                                                                                            
                     }
                 } else if (creep.store[RESOURCE_ENERGY] == 0) {
                     //go to default source                    
                     var source = creep.getObject(creep.memory.source);
                     creep.harvestSource(source,ACTIONS);                    
-                } else {
-                    console.log('______________________________________________________________________________');
                 }
             }   
-        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {
+        } else if (creep.memory.lastAction == ACTIONS.HARVEST) {            
             if (creep.store.getFreeCapacity() > 0) {                
-                //first try to find a container with available energy. If not, go and harvest a source
-                if (containerDeposit != undefined) {
-                    var openContainers = creep.getHarvestContainers();                                
+                //first try to find a container with available energy. If not, go and harvest a source                
+                var openContainers = creep.getHarvestContainers();    
+                if (openContainers.length > 0) {
                     creep.harvestContainer(openContainers[0],ACTIONS);                                    
-                } else {
+                }  else {
                     //harvest source
                     var source = creep.getObject(creep.memory.source);
-                    creep.harvestSource(source,ACTIONS);                       
-                }
+                    creep.harvestSource(source,ACTIONS);
+                }                                                              
             } else {
-                //GO DO BUILD STUFF
-                var getNCons = creep.getObject(creep.memory.lastBuild);                
-                if (getNCons) {
-                    var construction = creep.repairSite(getNCons,ACTIONS);                    
+                //GO DO BUILD STUFF                
+                var getNCons = creep.getObject(creep.memory.lastBuild);       
+                var confirmRepair = creep.confirmRepair(getNCons);                         
+                console.log('repairWall',getNCons);  
+                if (confirmRepair) {
+                    var construction = creep.repairWall(getNCons,ACTIONS);                    
                 } else {                    
-                    var construction = creep.repairSite(null,ACTIONS);                    
+                    var construction = creep.repairWall(null,ACTIONS);                    
                 }                    
             }
         } else {
@@ -90,8 +83,41 @@ var repairerWall = {
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
         var repairerWalls = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairerWall' && creep.room.name == room.name);
-        console.log('repairerWalls: ' + roleDistribution.total, room.name);
-        if (roleDistribution.total < roleDistribution.min && 
+        //console.log('repairerWalls: ' + roleDistribution.total, room.name);
+        var min = roleDistribution.min;
+        if (room.memory.repairWalls > 0 && room.memory.repairWalls <= 5) {
+            min = 1;
+        } else if (room.memory.repairWalls > 5 && room.memory.repairWalls <= 10) {
+            min = 1;
+        } else if (room.memory.repairWalls > 10 && room.memory.repairWalls <= 15) {
+            min = 2;
+        } else if (room.memory.repairWalls > 15 && room.memory.repairWalls <= 20) {
+            min = 2;
+        } else if (room.memory.repairWalls > 20 && room.memory.repairWalls <= 25) {
+            min = 3;
+        } else if (room.memory.repairWalls > 25 && room.memory.repairWalls <= 30) {
+            min = 3;
+        } else if (room.memory.repairWalls > 35 && room.memory.repairWalls <= 40) {
+            min = 4;
+        } else if (room.memory.repairWalls > 45 && room.memory.repairWalls <= 50) {
+            min = 4;
+        } else if (room.memory.repairWalls > 55 && room.memory.repairWalls <= 60) {
+            min = 5;
+        } else if (room.memory.repairWalls > 60 && room.memory.repairWalls <= 65) {
+            min = 5;
+        } else if (room.memory.repairWalls > 65 && room.memory.repairWalls <= 70) {
+            min = 6;
+        } else if (room.memory.repairWalls > 70 && room.memory.repairWalls <= 75) {
+            min = 6;
+        } else if (room.memory.repairWalls > 75 && room.memory.repairWalls <= 80) {
+            min = 7;
+        } else if (room.memory.repairWalls > 80 && room.memory.repairWalls <= 85) {
+            min = 7;
+        } else if (room.memory.repairWalls > 85) {
+            min = 8;
+        }   
+
+        if (roleDistribution.total < min && 
             room.memory.numberExtensions >= roleDistribution.minExtensions && 
             roleDistribution.total <= roleDistribution.max && room.memory.repairWalls > 0) {
             return true;
