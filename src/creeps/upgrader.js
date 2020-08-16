@@ -2,34 +2,132 @@ var roleUpgrader = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        if(creep.store[RESOURCE_ENERGY] == 0) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
+        var ACTIONS = {
+            HARVEST: 1,
+            DEPOSIT: 2,
+            BUILD: 3,
+            UPGRADE: 4
+        };
+        if (creep.memory.sourceRoom == undefined) {
+            creep.memory.sourceRoom = creep.room.name;
         }
-        else {
+        //GET LAST ACTION AND GO TO THAT.
+        var continueUpgrade = false;
+        if (creep.energy != 0 && creep.memory.lastAction == ACTIONS.UPGRADE) {
+            continueUpgrade = true;
+        }
+        //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
+        if (creep.memory.source == undefined) {
+            var srcs = creep.room.find(
+                FIND_SOURCES, {
+                    filter: function(src) {
+                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
+                        if(targets.length == 0) {
+                            return true;
+                        }
+        
+                        return false;
+                    }
+            });
+            var srcIndex = Math.floor(Math.random()*srcs.length);
+            creep.memory.source = srcs[srcIndex].id;  
+        }
+        // var containerDeposit;
+        // _.forEach(creep.room.memory.sources, function(source) {
+        //     if (source.containersBuilt.length > 0) { 
+        //         containerDeposit = source.containersBuilt[0];
+        //     };
+        // });
+
+        if(creep.store.getFreeCapacity() > 0 && !continueUpgrade) {
+            //go to default source
+            var source = creep.getObject(creep.memory.source);
+            creep.harvestEnergy(source,ACTIONS);
+        } else if (creep.store[RESOURCE_ENERGY] == 0) {
+            creep.say('Empty');
+            creep.harvestEnergy(source,ACTIONS);            
+        } else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller);
+                creep.memory.lastAction = ACTIONS.UPGRADE;
             }
         }
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room) {
-        var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
-        console.log('Upgraders: ' + upgraders.length, room.name);
-
-        if (upgraders.length < 2) {
+    spawn: function(room, level, roleDistribution) {
+        //var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.room.name == room.name);
+        //console.log('Upgraders: ' + roleDistribution.total, room.name);
+        var min = roleDistribution.min;
+        switch(room.controller.level) {
+            case 0:
+                min = 2;
+                break;
+            case 1:
+                min = 4;
+                break;
+            case 2:
+                min = 6;
+                break;
+            case 3:
+                min = 8;
+                break;
+            case 4:
+                min = 10;
+                break;            
+            case 5:
+                min = 12;
+                break;                        
+        }
+        if (roleDistribution.total < min
+            && room.memory.numberExtensions >= roleDistribution.minExtensions
+            && roleDistribution.total <= roleDistribution.max) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
-    spawnData: function(room) {
+    spawnData: function(room, level) {
             let name = 'Upgrader' + Game.time;
-            let body = [WORK, CARRY, MOVE];
             let memory = {role: 'upgrader'};
-        
-            return {name, body, memory};
+            if(level <= 1) {
+                let body = [WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 2) {
+                let body = [WORK, WORK, CARRY, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 3) {
+                let body = [WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 4) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 5) {
+                let body = [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 6) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 7) {
+                let body = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 8) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level <= 9) {
+                let body = [WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            } else
+            if(level >= 10) {
+                let body = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+                return {name, body, memory};
+            }
     }
 };
 
