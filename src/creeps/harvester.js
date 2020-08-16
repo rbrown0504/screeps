@@ -169,12 +169,12 @@ var harvester = {
                 // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForUpperRight.length + ' buildable areas in the upper right quadrant 3 range.');
                 // console.log('For Energy Source: ' + constructionSource.id + ' There are ' + filterForLowerRight.length + ' buildable areas in the lower right quadrant 3 range.');                
                 if (filterForLowerLeft.length > 0 ) {
-                    console.log('create a construction site');
+                    //console.log('create a construction site');
                     creep.moveTo(filterForLowerLeft[0].pos);
                     Game.spawns['Spawn1'].room.createConstructionSite(creep.pos.x,creep.pos.y, STRUCTURE_CONTAINER);                    
                 }
                 if (!creep.pos.inRangeTo(constructionSource,3)) {
-                    console.log('Sittinhg here waiting to build');
+                    //console.log('Sittinhg here waiting to build');
                     creep.moveTo(constructionSource);
                 }                  
             } else if (creep.memory.lastAction == ACTIONS.BUILD) {      
@@ -198,9 +198,17 @@ var harvester = {
                 var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
                 creep.buildSite(construction[0],ACTIONS);                
             } else {     
-                console.log('6666666666666666_______JUST REWORKED THIS________________66666666666666666666666666666');
-                //creep.depositContainer(null,ACTIONS);
-                console.log('depositContainerResult:',creep.depositContainer(null,ACTIONS));
+                //console.log('6666666666666666_______JUST REWORKED THIS________________66666666666666666666666666666');
+                if (roleDistribution['carrier'].total > 1) {
+                    creep.depositContainer(null,ACTIONS);
+                } else {
+                    creep.deposit(null,ACTIONS)
+                }
+                
+                //console.log('depositContainerResult:',creep.depositContainer(null,ACTIONS));
+                // if (creep.deposit(null,ACTIONS)) {
+
+                // }
                 //creep.deposit(deposits,ACTIONS);
                 // if (deposits.length > 0) {                    
                 //     //console.log('xxxxxxxx',JSON.stringify(deposits[0]));
@@ -218,40 +226,34 @@ var harvester = {
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
+        //var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
         //number of deposits
         //var depositContainers =  this.getDepositContainers();
         //console.log('spawnHarvesters: ', 'depositNeeded: ', room.memory.depositNeeded);
         var min = roleDistribution.min;
         switch(room.memory.numberExtensions) {
             case 0:
-                min = 2;
+                min = 4;
                 break;
             case 1:
-                min = 3;
+                min = 6;
                 break;
             case 2:
-                min = 3;
+                min = 6;
                 break;
             case 3:
-                min = 4;
+                min = 6;
                 break;
             case 4:
-                min = 4;
+                min = 6;
                 break;            
             case 5:
-                min = 4;
+                min = 6;
                 break;                        
         }
-        if (room.memory.numberExtensions ) {
-
-
-        }
-
-
-
-
-        console.log('Harvesters: ' + roleDistribution.total, room.name);        
+        
+        
+        //console.log('Harvesters: ' + roleDistribution.total, room.name);        
         if (roleDistribution.total < min
             && room.memory.numberExtensions >= roleDistribution.minExtensions 
             && roleDistribution.total <= roleDistribution.max) {
