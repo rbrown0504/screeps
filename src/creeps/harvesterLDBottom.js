@@ -1,4 +1,4 @@
-var harvesterLD = {
+var harvesterLDBottom = {
 
     /** @param {Creep} creep **/
     run: function(creep,roleDistribution) {
@@ -24,24 +24,19 @@ var harvesterLD = {
         if (creep.memory.sourceRoom == undefined) {
             creep.memory.sourceRoom = creep.room.name;
         }
-
         if (creep.memory.targetRoom == undefined) {
-            creep.memory.targetRoom = 'W6N9';
+            creep.memory.targetRoom = creep.room.memory.roomBottom;
         }
-        //console.log('harvesterLD');
+        //do work        
         if (creep.memory.sourceRoom == creep.room.name) {
             creep.depositContainer(null,ACTIONS);
             if (creep.store[RESOURCE_ENERGY] == 0) {
-                //var targetRoom = creep.getObject(creep.memory.targetRoom);                
                 var exit = creep.room.findExitTo(creep.memory.targetRoom);
                 creep.moveTo(creep.pos.findClosestByRange(exit));    
-                //console.log('harvesterLD_EXIT',creep.moveTo(creep.pos.findClosestByRange(exit)),JSON.stringify(exit));
             }
-        } if (creep.memory.targetRoom == creep.room.name) {
-            //console.log('harvesterLD_targetRoom');  
+        } else if (creep.memory.targetRoom == creep.room.name) {
             if (creep.store.getFreeCapacity()>0 && creep.memory.lastAction != ACTIONS.HARVEST) {                
                 var source = creep.getSource();
-                //console.log('source',source,creep.harvestSource(source,ACTIONS));
                 creep.harvestSource(source,ACTIONS);
             } else if (creep.memory.lastAction == ACTIONS.HARVEST & creep.store.getFreeCapacity()>0) {
                 var source = creep.getObject(creep.memory.lastHarvest);
@@ -54,7 +49,6 @@ var harvesterLD = {
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution,globalRoleTotals) {
-        //var harvesterLDs = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvesterLD' && creep.room.name == room.name);                
         var min = roleDistribution.min;        
         switch(room.memory.numberExtensions) {
             case 0:
@@ -95,16 +89,18 @@ var harvesterLD = {
                 break;                           
         }
         
-        console.log('harvesterLDGlobalTotal',globalRoleTotals.total,globalRoleTotals.total < min,globalRoleTotals.total <= roleDistribution.max);
+        //console.log('harvesterLDBottomGlobalTotal',globalRoleTotals.total,globalRoleTotals.total < min,globalRoleTotals.total <= roleDistribution.max);
         if (globalRoleTotals.total < min
-            && globalRoleTotals.total <= roleDistribution.max) {
+            && globalRoleTotals.total <= roleDistribution.max
+            && room.memory.harvestBottom
+            && room.memory.totalContainers > 0) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
     spawnData: function(room, level) {
-            let name = 'harvesterLD' + Game.time;
-            let memory = {role: 'harvesterLD', targetRoom: 'W6N9'};
+            let name = 'harvesterLDBottom' + Game.time;
+            let memory = {role: 'harvesterLDBottom'};
             if(level <= 1) {
                 let body = [WORK, CARRY, MOVE];
                 return {name, body, memory};
@@ -148,4 +144,4 @@ var harvesterLD = {
     }
 };
 
-module.exports = harvesterLD;
+module.exports = harvesterLDBottom;
