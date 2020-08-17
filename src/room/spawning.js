@@ -77,7 +77,9 @@ function spawnCreeps(room,roleDistribution,globalRoleTotals) {
         // find the first or 0th spawn in the room
         let spawn = room.find(FIND_MY_SPAWNS)[0];
         let result = spawn.spawnCreep(creepSpawnData.body, creepSpawnData.name, {memory: creepSpawnData.memory});
-    
+        if (Game.spawns.Spawn1.claimRoom != undefined && result == 0 && creepTypeNeeded == 'claimer') {
+            delete Game.spawns.Spawn1.claimRoom;
+        }
         console.log("Tried to Spawn:", creepTypeNeeded, result)
     }
 }
