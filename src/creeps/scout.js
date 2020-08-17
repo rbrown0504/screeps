@@ -46,7 +46,7 @@ var scout = {
             && !creep.memory.workingLeft
             && creep.memory.going != GOTO.DESTINATION) {
             //go to the room on the left
-            creep.memory.workingLeft = true;            
+            creep.memory.workingLeft = true;
             creep.scoutDestination(GOTO,FIND_EXIT_LEFT);            
         } 
         else if (creep.memory.leftResult == 'NONE' 
@@ -71,7 +71,8 @@ var scout = {
             && creep.memory.going != GOTO.DESTINATION) {
             //go to exit right
             creep.memory.workingBottom = true;
-            creep.scoutDestination(GOTO,FIND_EXIT_BOTTOM);                       
+            var result = creep.scoutDestination(GOTO,FIND_EXIT_BOTTOM);                       
+            console.log('scountBottomresult',result);
         }
         else if (creep.memory.workingBottom
             && creep.room.name == creep.memory.sourceRoom 
@@ -143,9 +144,10 @@ var scout = {
         }        
     },
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution) {        
-        if (room.memory.roomLeft == undefined || room.memory.roomRight == undefined || room.memory.roomUp == undefined || room.memory.roomBottom == undefined) {
-           //return true;
+    spawn: function(room, level, roleDistribution,globalRoleTotals) {
+        if ( (room.memory.roomLeft == 'NONE' || room.memory.roomRight == 'NONE' || room.memory.roomUp == 'NONE' || room.memory.roomBottom == 'NONE') 
+                && globalRoleTotals.total == 0) {
+           return true;
         }
     },
     // returns an object with the data to spawn a new creep
