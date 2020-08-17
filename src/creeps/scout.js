@@ -141,6 +141,7 @@ var scout = {
         else {
             creep.say('DONE');
             console.log('SCOUT IS DONE' , creep.name , creep.pos);
+            creep.suicide();
         }        
     },
     // checks if the room needs to spawn a creep
