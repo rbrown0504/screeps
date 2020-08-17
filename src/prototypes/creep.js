@@ -20,6 +20,31 @@ Creep.prototype.getRoomSource = function(id) {
     });
 };
 
+Creep.prototype.claimRoom = function claimRoom(ACTIONS) {                             
+    var result = this.claimController(this.room.controller);    
+    if(result == ERR_NOT_IN_RANGE) {
+        this.moveTo(this.room.controller);
+        this.memory.lastAction = ACTIONS.CLAIM;
+    }
+    return result;
+}
+
+Creep.prototype.scoutHome = function scoutHome(GOTO) {    
+    //find exit to source room        
+    this.memory.going = GOTO.HOME;  
+    var exit = this.room.findExitTo(this.memory.sourceRoom);
+    var result = this.moveTo(this.pos.findClosestByRange(exit));    
+    return result;
+}
+
+Creep.prototype.scoutDestination = function scoutDestination(GOTO,direction) {
+    //go to a specified exit direction
+    this.memory.going = GOTO.DESTINATION;
+    var exit = this.room.find(direction);    
+    var result = this.moveTo(this.pos.findClosestByRange(exit));
+    return result;
+}
+
 Creep.prototype.getOpenDeposits = function() {
     //get a deposit (extension or spawn) with free capacity
     var deposits = this.room.find(FIND_STRUCTURES, {
@@ -292,7 +317,7 @@ Creep.prototype.getBuildSpot = function(creep,theBuildObjectCenter,surroundingSp
         }
     });        
     var buildableSite;
-    if (finalResults.length > 0) {        
+    if (finalResults.length > 1) {        
         buildableSite = finalResults[0];
     }
 	return buildableSite;
@@ -315,4 +340,3 @@ Creep.prototype.getSource = function() {
 
 	return srcs[srcIndex];
 };
-
