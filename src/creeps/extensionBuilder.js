@@ -11,29 +11,8 @@ var extensionBuilder = {
         if (creep.memory.sourceRoom == undefined) {
             creep.memory.sourceRoom = creep.room.name;
         }
-
-        var extensionsNeeded = 0;
-        switch(creep.room.controller.level) {
-            case 0:
-                extensionsNeeded = 0;
-                break;
-            case 1:
-                extensionsNeeded = 5;                
-                break;
-            case 2:
-                extensionsNeeded = 5;
-                break;
-            case 3:
-                extensionsNeeded = 5;
-                break;
-            case 4:
-                extensionsNeeded = 5;
-                break;            
-            case 5:
-                extensionsNeeded = 5;
-                break;                        
-        }
-
+        //if at level maximum of extensions, creep is no longer needed
+        var extensionsNeeded = room.getExtensionsNeeded();        
         if (extensionsNeeded == creep.room.memory.numberExtensions) {
             creep.suicide();
         }
@@ -152,29 +131,8 @@ var extensionBuilder = {
         } else if (room.memory.constructExtensions > 55 && room.memory.constructExtensions <= 60) {
             min = 12;
         }
-
-        var extensionsNeeded = 0;
-        switch(room.controller.level) {
-            case 0:
-                extensionsNeeded = 0;
-                break;
-            case 1:
-                extensionsNeeded = 5;                
-                break;
-            case 2:
-                extensionsNeeded = 5;
-                break;
-            case 3:
-                extensionsNeeded = 5;
-                break;
-            case 4:
-                extensionsNeeded = 5;
-                break;            
-            case 5:
-                extensionsNeeded = 5;
-                break;                        
-        }
-
+        
+        var extensionsNeeded = room.getExtensionsNeeded();        
         if (extensionsNeeded > 0 && room.memory.numberExtensions < extensionsNeeded && room.memory.constructExtensions == 0) {
             min = 1;
         }
