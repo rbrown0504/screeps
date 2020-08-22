@@ -25,22 +25,16 @@ var miner = {
             creep.memory.sourceRoom = creep.room.name;
         }
         //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
-        if (creep.memory.source == undefined) {      
-            var srcs = creep.room.find(
-                FIND_SOURCES, {
-                    filter: function(src) {
-                        var targets = src.pos.findInRange(FIND_HOSTILE_CREEPS, 3);
-                        if(targets.length == 0) {
-                            return true;
-                        }
-        
-                        return false;
-                    }
-            });
-            var srcIndex = Math.floor(Math.random()*srcs.length);
-            creep.memory.source = srcs[srcIndex].id;            
-        }       
-
+        if (creep.memory.source == undefined) {                  
+            creep.memory.source = creep.getSource().id;
+            //because a miner, assign a default container                   
+            var sourceData = creep.room.memory.sources[creep.memory.source];
+            if (sourceData.containersBuilt.length > 0) {
+                if (creep.getObject(sourceData.containersBuilt[0]) != undefined) {
+                    creep.memory.containerDeposit = sourceData.containersBuilt[0];
+                }
+            }        
+        }
         //start doing stuff
         if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
             //go to default source            
@@ -55,8 +49,14 @@ var miner = {
                 creep.say('Empty');
                 var source = creep.getObject(creep.memory.source);
                 creep.harvestSource(source,ACTIONS);                                  
-            } else {     
-                creep.depositContainer(null,ACTIONS);                          
+            } else {
+                if (creep.memory.containerDeposit != undefined) {
+                    console.log('hasContainerNeedsDeposit');
+                    var container = creep.getObject(creep.memory.containerDeposit);
+                    creep.depositContainer(container,ACTIONS);  
+                } else {
+                    creep.depositContainer(null,ACTIONS);
+                }                
             }
         }        
     },
