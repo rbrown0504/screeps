@@ -15,8 +15,8 @@ function population(room) {
     if (room.memory.harvestTop == undefined) {
         room.memory.harvestTop = false;
     }
-    if (room.memory.harvestTop == undefined) {
-        room.memory.harvestTop = false;
+    if (room.memory.harvestBottom == undefined) {
+        room.memory.harvestBottom = false;
     }
 
     if (room.memory.roomLeft == undefined) {
