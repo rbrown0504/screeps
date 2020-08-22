@@ -138,19 +138,19 @@ var carrier = {
                 min = 0;
                 break;
             case 1:
-                min = 2;
-                break;
-            case 2:
-                min = 4;
-                break;
-            case 3:
                 min = 6;
                 break;
+            case 2:
+                min = 12;
+                break;
+            case 3:
+                min = 16;
+                break;
             case 4:
-                min = 8;
+                min = 20;
                 break;            
             case 5:
-                min = 10;
+                min = 24;
                 break;                        
         }
         
