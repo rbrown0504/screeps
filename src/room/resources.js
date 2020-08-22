@@ -87,7 +87,7 @@ function resources(room) {
         });
     });
     //rule: there must be at least on container within 3 range of each energy source
-    console.log('Sources in range (3) of a container ' + sourcesInRangeToContainer + ' sources length ' + sources.length + ' sources container length ' + sourcesInRangeToContainer.length);
+    //console.log('Sources in range (3) of a container ' + sourcesInRangeToContainer + ' sources length ' + sources.length + ' sources container length ' + sourcesInRangeToContainer.length);
     
     if (sources.length > sourcesInRangeToContainer.length) {
         //console.log('need to build a container');        
