@@ -26,7 +26,7 @@ var harvesterLDTop = {
         }
 
         if (creep.memory.targetRoom == undefined) {
-            creep.memory.targetRoom = creep.memory.roomTop;
+            creep.memory.targetRoom = creep.room.memory.roomTop;
         }
         //do work
         if (creep.memory.sourceRoom == creep.room.name) {
@@ -53,40 +53,40 @@ var harvesterLDTop = {
         var min = roleDistribution.min;        
         switch(room.memory.numberExtensions) {
             case 0:
-                min = 2;
-                break;
-            case 1:
-                min = 4;
-                break;
-            case 2:
                 min = 6;
                 break;
+            case 1:
+                min = 10;
+                break;
+            case 2:
+                min = 14;
+                break;
             case 3:
-                min = 8;
+                min = 18;
                 break;
             case 4:
-                min = 8;
+                min = 18;
                 break;            
             case 5:
-                min = 8;
+                min = 18;
                 break;
             case 6:
-                min = 10;
+                min = 18;
                 break;
             case 7:
-                min = 10;
+                min = 18;
                 break;
             case 8:
-                min = 10;
+                min = 18;
                 break;
             case 9:
-                min = 10;
+                min = 18;
                 break;
             case 10:
-                min = 10;
+                min = 18;
                 break;            
             case 11:
-                min = 10;
+                min = 18;
                 break;                           
         }
         //console.log('harvesterLDTopGlobalTotal',globalRoleTotals.total,globalRoleTotals.total < min,globalRoleTotals.total <= roleDistribution.max);
