@@ -60,33 +60,10 @@ var miner = {
             }
         }        
     },
+
     // checks if the room needs to spawn a creep
-    spawn: function(room, level, roleDistribution) {
-        //when a container has been built next to a source, that source gets a miner
-        var min = roleDistribution.min;
-        switch(room.memory.totalContainers) {
-            case 0:
-                min = 0;
-                break;
-            case 1:
-                min = 6;
-                break;
-            case 2:
-                min = 9;
-                break;
-            case 3:
-                min = 9;
-                break;
-            case 4:
-                min = 9;
-                break;            
-            case 5:
-                min = 9;
-                break;                        
-        }
-        
-        
-        //console.log('miners: ' + roleDistribution.total, room.name);        
+    spawn: function(room, level, roleDistribution) {        
+        var min = room.memory.totalSources * 3;                
         if (roleDistribution.total < min
             && room.memory.numberExtensions >= roleDistribution.minExtensions 
             && roleDistribution.total <= roleDistribution.max

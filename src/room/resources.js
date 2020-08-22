@@ -35,10 +35,11 @@ function resources(room) {
         }
     }
     room.memory.sourceNeedsContainer = false;
-
+    room.memory.totalSources = 0;
     //go through sources and find structures (containers) that are in 3 range
     var sourcesInRangeToContainer = new Array();              
     _.forEach(room.memory.sources, function(source) {
+        room.memory.totalSources++;
         source.containersNear = null;
         source.hasContainerBuilt = false;
         source.containersBuilt = null;
