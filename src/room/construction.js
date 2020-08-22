@@ -29,18 +29,7 @@ function construction(room) {
     });    
     //go through structures
     var myStructures = room.find(FIND_STRUCTURES);
-    _.forEach(myStructures, function(structure) {
-        room.memory.totalStructures++;
-        if (structure.structureType == STRUCTURE_CONTAINER) {
-            room.memory.totalContainers++;		
-        }
-        if (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) {
-            room.memory.totalDeposits++;
-            if (structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-                room.memory.depositNeeded++;
-            }
-        }
-    });    
+    room.setStructureMemory(myStructures);    
 }
 
 module.exports = construction;

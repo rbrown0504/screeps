@@ -12,48 +12,12 @@ function spawnCreeps(room,roleDistribution,globalRoleTotals) {
         totalCreeps++;
 	}
     var populationLevelMultiplier = 8;
-    var creepLevel = totalCreeps / populationLevelMultiplier;
-    var controllerLevel = room.controller;
+    var creepLevel = totalCreeps / populationLevelMultiplier;    
 
-    var structures = room.find(FIND_STRUCTURES);
-    var fullDeposits = 0;
-    var numberExtensions = 0;
-    var numberRepairSites = 0;
-    var numberRepairWalls = 0;
-    room.memory.numberExtensions = 0;
-    room.memory.numberDeposits = 0;
-    room.memory.numberFullDeposits = 0;
-
-    var roomControllerLevelExtensionLimit = {
-        1 : 0,
-        2 : 5
-    }
+    //var structures = room.find(FIND_STRUCTURES);
     
-    for(var i = 0; i < structures.length; i++) {
-        var deposit = structures[i];        
-        if (deposit.structureType == STRUCTURE_EXTENSION || deposit.structureType == STRUCTURE_SPAWN) {
-            room.memory.numberDeposits++;
-            if(deposit.energy == deposit.energyCapacity) {
-                fullDeposits++;
-                room.memory.numberFullDeposits++;
-            }
-            if (deposit.structureType == STRUCTURE_EXTENSION) {
-                numberExtensions++
-                room.memory.numberExtensions++;
-            }            
-        }
-        if (deposit.hits < deposit.hitsMax && deposit.structureType != STRUCTURE_WALL) {
-            numberRepairSites++;
-        }
-        if (deposit.hits < deposit.hitsMax && deposit.structureType == STRUCTURE_WALL) {
-            numberRepairWalls++;
-        }
-    }
     
-    room.memory.repairSites = numberRepairSites;
-    room.memory.repairWalls = numberRepairWalls;
-
-    var resourceLevel = fullDeposits / 5;
+    var resourceLevel = room.memory.numberFullDeposits / 5;
     var level = Math.floor(creepLevel + resourceLevel); 	    
     // find a creep type that returns true for the .spawn() function
     let creepTypeNeeded = _.find(creepTypes, function(type) {
@@ -62,9 +26,9 @@ function spawnCreeps(room,roleDistribution,globalRoleTotals) {
 
     // get the data for spawning a new creep of creepTypeNeeded
     let creepSpawnData = creepLogic[creepTypeNeeded] && creepLogic[creepTypeNeeded].spawnData(room,level); 
-    console.log('SPAWN: Total Structures: ' + structures.length + ' , ' + 'Full Deposits (spawn/extension): ' + fullDeposits, 'NumberExtensions: ' , numberExtensions, 'RepairSites', numberRepairSites, 'RepairWalls',numberRepairWalls);
+    console.log('SPAWN: Total Structures: ' + room.memory.totalStructures + ' , ' + 'Full Deposits (spawn/extension): ' + room.memory.numberFullDeposits, 'NumberExtensions: ' , room.memory.numberExtensions, 'RepairSites', room.memory.repairSites, 'RepairWalls',room.memory.repairWalls);
     console.log('SPAWN','popMultiplier',populationLevelMultiplier,'creepLevel' , creepLevel,'resourceLevel' , resourceLevel, 'roomLevel' , level,'RoomControllerLevel' , room.controller.level,'controllerProgressPercentage', (room.controller.progress / room.controller.progressTotal) * 100 );
-    console.log(room.name,'Total: ' + totalCreeps,
+    console.log(room.name,'Total: ' + room.memory.totalCreeps,
                 'H:' + roleDistribution['harvester'].total +
                 '|U:' + roleDistribution['upgrader'].total +
                 '|B:' + roleDistribution['builder'].total + 
