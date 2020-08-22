@@ -11,6 +11,32 @@ var extensionBuilder = {
         if (creep.memory.sourceRoom == undefined) {
             creep.memory.sourceRoom = creep.room.name;
         }
+
+        var extensionsNeeded = 0;
+        switch(creep.room.controller.level) {
+            case 0:
+                extensionsNeeded = 0;
+                break;
+            case 1:
+                extensionsNeeded = 5;                
+                break;
+            case 2:
+                extensionsNeeded = 5;
+                break;
+            case 3:
+                extensionsNeeded = 5;
+                break;
+            case 4:
+                extensionsNeeded = 5;
+                break;            
+            case 5:
+                extensionsNeeded = 5;
+                break;                        
+        }
+
+        if (extensionsNeeded == creep.room.memory.numberExtensions) {
+            creep.suicide();
+        }
         //ADD A DEFAULT SOURCE IF ONE DOESN'T CURRENTLY EXIST
         if (creep.memory.source == undefined) {
             var srcs = creep.room.find(
