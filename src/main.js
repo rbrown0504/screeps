@@ -44,6 +44,15 @@ module.exports.loop = function () {
 		},
 		repairerWall: {
 			total: 0
+		},	
+		extensionBuilder: {
+			total: 0
+		},	
+		containerBuilder: {
+			total: 0
+		},
+		miner: {
+			total: 0
 		},		
 	}
 	//get some room metrics together
@@ -63,6 +72,15 @@ module.exports.loop = function () {
 			currentPercentage: 0,
 			max: 10,
 			min: 2,
+			minExtensions: 0,
+			minTTL: 0,			
+		},
+		miner: {
+			total: 0,
+			goalPercentage: 0.3,
+			currentPercentage: 0,
+			max: 9,
+			min: 0,
 			minExtensions: 0,
 			minTTL: 0,			
         },
@@ -155,6 +173,15 @@ module.exports.loop = function () {
 			min: 2,
 			minExtensions: 0,
 			minTTL: 0,
+		},
+		containerBuilder: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 1,
+			min: 1,
+			minExtensions: 0,
+			minTTL: 0,
         },
         // builder1: {
 		// 	total: 0,
@@ -175,6 +202,15 @@ module.exports.loop = function () {
 			minTTL: 0,
 		},
 		repairerWall: {
+			total: 0,
+			goalPercentage: 0.25,
+			currentPercentage: 0,
+			max: 5,
+			min: 0,
+			minExtensions: 0,
+			minTTL: 0,
+		},
+		extensionBuilder: {
 			total: 0,
 			goalPercentage: 0.25,
 			currentPercentage: 0,
@@ -248,11 +284,17 @@ module.exports.loop = function () {
 	console.log('GLOBAL POP:','Total (room controlled)',totalCreeps.length,
 				'S:' + globalRoleTotals['scout'].total +			
 				'|H:' + globalRoleTotals['harvester'].total +
+				'|M:' + globalRoleTotals['miner'].total +
+				'|C:' + globalRoleTotals['carrier'].total +
                 '|U:' + globalRoleTotals['upgrader'].total +
-                '|B:' + globalRoleTotals['builder'].total + 
-                '|C:' + globalRoleTotals['carrier'].total +
-                '|R:' + globalRoleTotals['repairer'].total +
-                '|LDH:' + globalRoleTotals['harvesterLD'].total +
+				'|B:' + globalRoleTotals['builder'].total +                 
+				'|BEx:' + globalRoleTotals['extensionBuilder'].total + 
+				'|BCo:' + globalRoleTotals['containerBuilder'].total +                 
+				'|LDHB:' + globalRoleTotals['harvesterLDBottom'].total +
+				'|LDHT:' + globalRoleTotals['harvesterLDTop'].total +
+				'|LDHL:' + globalRoleTotals['harvesterLDLeft'].total +
+				'|LDHR:' + globalRoleTotals['harvesterLDRight'].total +
+				'|R:' + globalRoleTotals['repairer'].total +
                 '|RW:' + globalRoleTotals['repairerWall'].total);
     // run defense logic for each room in our empire
 	_.forEach(Game.myRooms, r => roomLogic.defense(r));    

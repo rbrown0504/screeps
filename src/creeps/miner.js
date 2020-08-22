@@ -1,6 +1,4 @@
-const { map } = require("lodash");
-
-var harvester = {
+var miner = {
 
     /** @param {Creep} creep **/
     run: function(creep,roleDistribution) {
@@ -41,49 +39,7 @@ var harvester = {
             });
             var srcIndex = Math.floor(Math.random()*srcs.length);
             creep.memory.source = srcs[srcIndex].id;            
-        }
-
-        var deposits = creep.getOpenDeposits();
-
-        var spawns = [];
-        for(var n in Game.spawns) { 
-            var s = Game.spawns[n];
-            if(s.room == creep.room) {
-                spawns.push(s);
-            }
-        }        
-        var depositFor;
-        if(deposits == 0 && spawns[0].energy == spawns[0].energyCapacity) {
-            //help a builder out
-            depositFor = DEPOSIT_FOR.CONSTRUCTION;
-            //console.log('it would do this.. deposit for construction');
-        } else {
-            //go to containers or spawn
-            depositFor = DEPOSIT_FOR.POPULATION;
-            //console.log('it would do this.. deposit for population');
-        }                
-        var harvesterBuildContainer = false;
-        var sourceContainer = false;
-        var harvesterContainersToBuild = new Array();
-        var harvesterContainers = new Array();
-        //make a list of containers available
-        _.forEach(creep.room.memory.sources, function(source) {
-            if (source.containersNear.length > 0) {            
-                _.forEach(source.containersNear, function(theSource) {
-                    var sourceSplit = theSource.split("__");
-                    if (sourceSplit[1] == 'underConstruction') {                    
-                        harvesterContainersToBuild.push(sourceSplit[0]);                    
-                        if (roleDistribution['builder'].total == 0) {
-                            harvesterBuildContainer = true;
-                        }             
-                        
-                    } else if (sourceSplit[1] == 'container') {
-                        sourceContainer = true;
-                        harvesterContainers.push(sourceSplit[0]);                    
-                    }
-                });
-            }
-        });
+        }       
 
         //start doing stuff
         if(creep.store.getFreeCapacity() > 0 && !continueDeposit && !continueBuild) {
@@ -98,74 +54,50 @@ var harvester = {
             if (creep.store[RESOURCE_ENERGY] == 0) {
                 creep.say('Empty');
                 var source = creep.getObject(creep.memory.source);
-                creep.harvestSource(source,ACTIONS);                
-            } else if (creep.memory.lastAction == ACTIONS.BUILD) {
-                //check if there are containers near a resource that are still a construction site and need to be built
-                var getNCons = creep.getObject(creep.memory.lastBuild);
-                if (getNCons && creep.store[RESOURCE_ENERGY] != 0) {  
-                    creep.buildSite(getNCons,ACTIONS);
-                } else {
-                    var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                    creep.buildSite(construction[0],ACTIONS);                    
-                }
-            } else if (harvesterBuildContainer && depositFor != DEPOSIT_FOR.POPULATION) {                     
-                //check if there are containers near a resource that are still a construction site and need to be built
-                var target = Game.getObjectById(harvesterContainersToBuild[0]);
-                creep.buildSite(target,ACTIONS);
-            } else if (depositFor == DEPOSIT_FOR.CONSTRUCTION) {   
-                //help a builder out
-                var construction = creep.room.find(FIND_CONSTRUCTION_SITES);                
-                creep.buildSite(construction[0],ACTIONS);                
-            } else {                     
-                if (roleDistribution['carrier'].total > 1) {
-                    creep.depositContainer(null,ACTIONS);
-                } else {
-                    creep.deposit(null,ACTIONS)
-                }             
+                creep.harvestSource(source,ACTIONS);                                  
+            } else {     
+                creep.depositContainer(null,ACTIONS);                          
             }
         }        
     },
     // checks if the room needs to spawn a creep
     spawn: function(room, level, roleDistribution) {
-        //var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.room.name == room.name);
-        //number of deposits
-        //var depositContainers =  this.getDepositContainers();
-        //console.log('spawnHarvesters: ', 'depositNeeded: ', room.memory.depositNeeded);
+        //when a container has been built next to a source, that source gets a miner
         var min = roleDistribution.min;
-        switch(room.memory.numberExtensions) {
+        switch(room.memory.totalContainers) {
             case 0:
-                min = 4;
+                min = 0;
                 break;
             case 1:
                 min = 6;
                 break;
             case 2:
-                min = 6;
+                min = 9;
                 break;
             case 3:
-                min = 6;
+                min = 9;
                 break;
             case 4:
-                min = 6;
+                min = 9;
                 break;            
             case 5:
-                min = 6;
+                min = 9;
                 break;                        
         }
         
         
-        //console.log('Harvesters: ' + roleDistribution.total, room.name);        
+        //console.log('miners: ' + roleDistribution.total, room.name);        
         if (roleDistribution.total < min
             && room.memory.numberExtensions >= roleDistribution.minExtensions 
             && roleDistribution.total <= roleDistribution.max
-            && room.memory.totalContainers == 0) {
+            && room.memory.totalContainers > 0) {
             return true;
         }
     },
     // returns an object with the data to spawn a new creep
     spawnData: function(room, level) {
-            let name = 'harvester' + Game.time;
-            let memory = {role: 'harvester'};
+            let name = 'miner' + Game.time;
+            let memory = {role: 'miner'};
             if(level <= 1) {
                 let body = [WORK, CARRY, MOVE];
                 return {name, body, memory};
@@ -209,4 +141,4 @@ var harvester = {
     }
 };
 
-module.exports = harvester;
+module.exports = miner;
